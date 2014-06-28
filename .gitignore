@@ -3,6 +3,7 @@
 *.a
 *.so
 
+thumbnail_images/*
 # Folders
 _obj
 _test
@@ -21,3 +22,4 @@ _testmain.go
 
 *.exe
 *.test
+go-saic
