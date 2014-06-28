@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"image/color"
 	"log"
 	"os"
 	"path/filepath"
@@ -22,13 +23,14 @@ var sourceImage string
 var originalImages []OriginalImage
 
 type OriginalImage struct {
-	filePath      string // complete path
-	filename      string // just file
-	format        string
-	size          int64
-	width         int
-	height        int
-	thumbnailPath string
+	filePath        string // complete path
+	filename        string // just file
+	format          string
+	size            int64
+	width           int
+	height          int
+	thumbnailPath   string
+	prominentColour color.Color
 }
 
 func init() {
@@ -51,17 +53,19 @@ func main() {
 	if scanImages {
 		fmt.Println("scan recursively:", recursiveScan)
 	}
+
 	fmt.Println("imagedir:", imageDir)
 	fmt.Println("sourceimage:", sourceImage)
 
 	if scanImages {
 		findOriginalImages(imageDir)
-
 	}
+
 	if createThumbnails {
+		// create a thumbnail for each image
 		createThumbnailImages(originalImages, thumbnailsDir)
-
 	}
+
 }
 
 func findOriginalImages(imageDir string) {

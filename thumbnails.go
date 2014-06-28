@@ -103,6 +103,15 @@ func createThumbnailImage(originalImage *OriginalImage) (image.Image, error) {
 
 	originalImage.thumbnailPath = fullPath
 
+	promColor, err := findProminentColour(thumbnailImage)
+	if err != nil {
+		log.Printf("Error finding prominent colour: %s", err)
+		return nil, err
+	}
+
+	originalImage.prominentColour = promColor
+	log.Printf("Image: %s Prominent colour: %d-%d-%d-%d", originalImage.filename, originalImage.prominentColour)
+
 	return thumbnailImage, nil
 
 }
