@@ -1,14 +1,10 @@
 package image
 
 import (
-	"bufio"
 	"fmt"
 	"github.com/nfnt/resize"
 	"github.com/telecoda/go-saic/models"
 	"image"
-	_ "image/gif"
-	_ "image/jpeg"
-	"image/png"
 	"log"
 	"os"
 	"strings"
@@ -49,14 +45,7 @@ func CreateThumbnailImages(sourceImages []models.SourceImage, thumbnailImagesDir
 
 func createThumbnailImage(sourceImage *models.SourceImage, thumbnailImagesDir string) (image.Image, error) {
 
-	file, err := os.Open(sourceImage.FilePath)
-	if err != nil {
-		log.Printf("Error during createThumbnailImage: %s", err)
-		return nil, err
-	}
-	defer file.Close()
-
-	loadedImage, format, err := image.Decode(file)
+	loadedImage, format, err := LoadImage(sourceImage.FilePath)
 	if err != nil {
 		log.Printf("Error during createThumbnailImage: %s", err)
 		return nil, err
@@ -79,18 +68,26 @@ func createThumbnailImage(sourceImage *models.SourceImage, thumbnailImagesDir st
 	// all saved as .png files
 	fullPath += ".png"
 
-	if imgFilePng, err := os.Create(fullPath); err != nil {
+	/*
+		if imgFilePng, err := os.Create(fullPath); err != nil {
+			log.Printf("Error creating PNG thumbnail: %s\n", err)
+			return nil, err
+		} else {
+			defer imgFilePng.Close()
+			buffer := bufio.NewWriter(imgFilePng)
+			err := png.Encode(buffer, thumbnailImage)
+			if err != nil {
+				log.Printf("Error encoding image:%s", err)
+				return nil, err
+			}
+			buffer.Flush()
+		}
+	*/
+
+	err = SaveImage(fullPath, &thumbnailImage)
+	if err != nil {
 		log.Printf("Error creating PNG thumbnail: %s\n", err)
 		return nil, err
-	} else {
-		defer imgFilePng.Close()
-		buffer := bufio.NewWriter(imgFilePng)
-		err := png.Encode(buffer, thumbnailImage)
-		if err != nil {
-			log.Printf("Error encoding image:%s", err)
-			return nil, err
-		}
-		buffer.Flush()
 	}
 
 	sourceImage.ThumbnailPath = fullPath
