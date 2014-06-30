@@ -15,11 +15,13 @@ var sourceImages []models.SourceImage
 
 func FindSourceImages(imageDir string) []models.SourceImage {
 	log.Println("Starting findSourceImages.")
+	fmt.Printf("[")
 
 	sourceImages = make([]models.SourceImage, TOTAL_IMAGES)
 
 	filepath.Walk(imageDir, myWalkFunc)
 
+	fmt.Println("]")
 	log.Println("Ending findSourceImages.")
 
 	return sourceImages
@@ -32,8 +34,7 @@ func myWalkFunc(path string, fileInfo os.FileInfo, err error) error {
 	if strings.HasSuffix(filename, ".jpg") ||
 		strings.HasSuffix(filename, ".png") ||
 		strings.HasSuffix(filename, ".gif") {
-		fmt.Printf("Image found. path: %s fileInfo:%s \n", path, fileInfo.Name())
-
+		fmt.Printf(".")
 		sourceImage := new(models.SourceImage)
 		sourceImage.FilePath = path
 		sourceImage.Filename = fileInfo.Name()

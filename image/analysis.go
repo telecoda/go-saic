@@ -3,11 +3,9 @@ package image
 import (
 	"image"
 	"image/color"
-	"log"
 )
 
 func findProminentColour(myImage image.Image) (color.RGBA, error) {
-	log.Println("Starting findProminentColour.")
 
 	var totalRed uint64
 	var totalGreen uint64
@@ -37,8 +35,6 @@ func findProminentColour(myImage image.Image) (color.RGBA, error) {
 	averageBlue := totalBlue / totalPixels
 
 	averageColour := color.RGBA{R: uint8(averageRed), G: uint8(averageGreen), B: uint8(averageBlue), A: 255}
-
-	log.Println("Ending findProminentColour.")
 
 	return averageColour, nil
 }
