@@ -53,7 +53,7 @@ func main() {
 		return
 	}
 
-	targetWidth = calcRelativeImageHeight(mosaicImage.Bounds().Max.X, mosaicImage.Bounds().Max.Y, targetWidth)
+	targetHeight = calcRelativeImageHeight(mosaicImage.Bounds().Max.X, mosaicImage.Bounds().Max.Y, targetWidth)
 
 	if searchImages {
 		sourceImages = goimage.FindSourceImages(sourceDir)
