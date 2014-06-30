@@ -1,9 +1,10 @@
-package main
+package image
 
 import (
 	"bufio"
 	"fmt"
 	"github.com/nfnt/resize"
+	"github.com/telecoda/go-saic/models"
 	"image"
 	_ "image/gif"
 	_ "image/jpeg"
@@ -13,7 +14,9 @@ import (
 	"strings"
 )
 
-func createThumbnailImages(originalImages []OriginalImage, thumbnailImagesDir string) error {
+const THUMBNAIL_WIDTH = 40
+
+func CreateThumbnailImages(sourceImages []models.SourceImage, thumbnailImagesDir string) error {
 	log.Println("Starting createThumbnailImages.")
 
 	// check if dir does not exist
@@ -27,10 +30,10 @@ func createThumbnailImages(originalImages []OriginalImage, thumbnailImagesDir st
 		}
 	}
 
-	for _, originalImage := range originalImages {
+	for _, sourceImage := range sourceImages {
 
-		if originalImage.filePath != "" {
-			thumbNailImage, err := createThumbnailImage(&originalImage)
+		if sourceImage.FilePath != "" {
+			thumbNailImage, err := createThumbnailImage(&sourceImage, thumbnailImagesDir)
 			if err != nil {
 				log.Printf("Error during createThumbnailImages: %s", err)
 				return err
@@ -48,14 +51,14 @@ func createThumbnailImages(originalImages []OriginalImage, thumbnailImagesDir st
 	return nil
 }
 
-func createThumbnailImage(originalImage *OriginalImage) (image.Image, error) {
-	log.Printf("Starting createThumbnailImage:%s\n", originalImage.filename)
+func createThumbnailImage(sourceImage *models.SourceImage, thumbnailImagesDir string) (image.Image, error) {
+	log.Printf("Starting createThumbnailImage:%s\n", sourceImage.Filename)
 
-	filename := strings.ToLower(originalImage.filename)
+	filename := strings.ToLower(sourceImage.Filename)
 
 	defer fmt.Printf("Ending createThumbnailImage:%s\n", filename)
 
-	file, err := os.Open(originalImage.filePath)
+	file, err := os.Open(sourceImage.FilePath)
 	if err != nil {
 		log.Printf("Error during createThumbnailImage: %s", err)
 		return nil, err
@@ -63,22 +66,22 @@ func createThumbnailImage(originalImage *OriginalImage) (image.Image, error) {
 	defer file.Close()
 
 	log.Printf("File opened: %s", file.Name())
-	sourceImage, format, err := image.Decode(file)
+	loadedImage, format, err := image.Decode(file)
 	if err != nil {
 		log.Printf("Error during createThumbnailImage: %s", err)
 		return nil, err
 	}
 
 	// update attributes
-	originalImage.width = sourceImage.Bounds().Max.X
-	originalImage.height = sourceImage.Bounds().Max.Y
+	sourceImage.Width = loadedImage.Bounds().Max.X
+	sourceImage.Height = loadedImage.Bounds().Max.Y
 
-	fmt.Printf("Image loaded name:%s format:%s %d\n", filename, format, sourceImage.Bounds().Max.X)
+	fmt.Printf("Image loaded name:%s format:%s %d\n", filename, format, loadedImage.Bounds().Max.X)
 
 	// resize
-	thumbnailImage := resize.Resize(THUMBNAIL_WIDTH, 0, sourceImage, resize.Lanczos3)
+	thumbnailImage := resize.Resize(THUMBNAIL_WIDTH, 0, loadedImage, resize.Lanczos3)
 
-	fullPath := thumbnailsDir + string(os.PathSeparator) + originalImage.filename
+	fullPath := thumbnailImagesDir + string(os.PathSeparator) + sourceImage.Filename
 	// remove file extension
 	fullPath = strings.TrimSuffix(fullPath, ".png")
 	fullPath = strings.TrimSuffix(fullPath, ".jpg")
@@ -101,7 +104,7 @@ func createThumbnailImage(originalImage *OriginalImage) (image.Image, error) {
 		buffer.Flush()
 	}
 
-	originalImage.thumbnailPath = fullPath
+	sourceImage.ThumbnailPath = fullPath
 
 	promColor, err := findProminentColour(thumbnailImage)
 	if err != nil {
@@ -109,8 +112,8 @@ func createThumbnailImage(originalImage *OriginalImage) (image.Image, error) {
 		return nil, err
 	}
 
-	originalImage.prominentColour = promColor
-	log.Printf("Image: %s Prominent colour: %d-%d-%d-%d", originalImage.filename, originalImage.prominentColour)
+	sourceImage.ProminentColour = promColor
+	log.Printf("Image: %s Prominent colour: %d-%d-%d-%d", sourceImage.Filename, sourceImage.ProminentColour)
 
 	return thumbnailImage, nil
 

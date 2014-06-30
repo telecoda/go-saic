@@ -3,35 +3,18 @@ package main
 import (
 	"flag"
 	"fmt"
-	"image/color"
-	"log"
+	goimage "github.com/telecoda/go-saic/image"
+	"github.com/telecoda/go-saic/models"
 	"os"
-	"path/filepath"
-	"strings"
 )
-
-const TOTAL_IMAGES = 100
-
-const THUMBNAIL_WIDTH = 40
 
 var scanImages bool
 var recursiveScan bool
 var createThumbnails bool
 var imageDir string
 var thumbnailsDir string
-var sourceImage string
-var originalImages []OriginalImage
-
-type OriginalImage struct {
-	filePath        string // complete path
-	filename        string // just file
-	format          string
-	size            int64
-	width           int
-	height          int
-	thumbnailPath   string
-	prominentColour color.Color
-}
+var mosaicImage string
+var sourceImages []models.SourceImage
 
 func init() {
 	flag.StringVar(&imageDir, "image_dir", "images", "images directory")
@@ -39,7 +22,7 @@ func init() {
 	flag.BoolVar(&scanImages, "s", false, "scan images")
 	flag.BoolVar(&recursiveScan, "r", false, "scan image directories recursively")
 	flag.BoolVar(&createThumbnails, "t", false, "create thumbnails")
-	flag.StringVar(&sourceImage, "image", "image.png", "source image")
+	flag.StringVar(&mosaicImage, "image", "image.png", "mosaic image")
 }
 
 var Usage = func() {
@@ -55,45 +38,15 @@ func main() {
 	}
 
 	fmt.Println("imagedir:", imageDir)
-	fmt.Println("sourceimage:", sourceImage)
+	fmt.Println("mosaicimage:", mosaicImage)
 
 	if scanImages {
-		findOriginalImages(imageDir)
+		sourceImages = goimage.FindSourceImages(imageDir)
 	}
 
 	if createThumbnails {
 		// create a thumbnail for each image
-		createThumbnailImages(originalImages, thumbnailsDir)
+		goimage.CreateThumbnailImages(sourceImages, thumbnailsDir)
 	}
 
-}
-
-func findOriginalImages(imageDir string) {
-	log.Println("Starting findOriginalImages.")
-
-	originalImages = make([]OriginalImage, TOTAL_IMAGES)
-
-	filepath.Walk(imageDir, myWalkFunc)
-
-	log.Println("Ending findOriginalImages.")
-}
-
-func myWalkFunc(path string, fileInfo os.FileInfo, err error) error {
-
-	// filter out image files only
-	filename := strings.ToLower(fileInfo.Name())
-	if strings.HasSuffix(filename, ".jpg") ||
-		strings.HasSuffix(filename, ".png") ||
-		strings.HasSuffix(filename, ".gif") {
-		fmt.Printf("Image found. path: %s fileInfo:%s \n", path, fileInfo.Name())
-
-		originalImage := new(OriginalImage)
-		originalImage.filePath = path
-		originalImage.filename = fileInfo.Name()
-		originalImage.size = fileInfo.Size()
-		originalImages = append(originalImages, *originalImage)
-
-	}
-
-	return nil
 }
