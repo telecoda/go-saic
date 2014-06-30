@@ -4,6 +4,7 @@
 *.so
 
 thumbnail_images/*
+target.png
 # Folders
 _obj
 _test

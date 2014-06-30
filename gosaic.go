@@ -64,6 +64,16 @@ func main() {
 		goimage.CreateThumbnailImages(sourceImages, thumbnailsDir)
 	}
 
+	// create target image
+	resizedImage := goimage.ResizeImage(&mosaicImage, uint(targetWidth))
+
+	// save image created
+	err = goimage.SaveImage(targetImagePath, &resizedImage)
+	if err != nil {
+		fmt.Printf("Error saving new image:%s Error:%s", targetImagePath, err)
+		return
+	}
+
 }
 
 // calculates
