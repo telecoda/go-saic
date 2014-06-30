@@ -86,3 +86,9 @@ func createThumbnailImage(sourceImage *models.SourceImage, thumbnailImagesDir st
 	return thumbnailImage, nil
 
 }
+
+func ResizeImage(originalImage *image.Image, newWidth int) image.Image {
+
+	return resize.Resize(newWidth, 0, originalImage, resize.Lanczos3)
+
+}
