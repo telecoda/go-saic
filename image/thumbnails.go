@@ -68,22 +68,6 @@ func createThumbnailImage(sourceImage *models.SourceImage, thumbnailImagesDir st
 	// all saved as .png files
 	fullPath += ".png"
 
-	/*
-		if imgFilePng, err := os.Create(fullPath); err != nil {
-			log.Printf("Error creating PNG thumbnail: %s\n", err)
-			return nil, err
-		} else {
-			defer imgFilePng.Close()
-			buffer := bufio.NewWriter(imgFilePng)
-			err := png.Encode(buffer, thumbnailImage)
-			if err != nil {
-				log.Printf("Error encoding image:%s", err)
-				return nil, err
-			}
-			buffer.Flush()
-		}
-	*/
-
 	err = SaveImage(fullPath, &thumbnailImage)
 	if err != nil {
 		log.Printf("Error creating PNG thumbnail: %s\n", err)
