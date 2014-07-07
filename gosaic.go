@@ -19,6 +19,10 @@ var mosaicImage image.Image
 var targetImagePath string
 var targetWidth int
 var targetHeight int
+var tileWidth int
+var tileHeight int
+var horiontalTiles int
+var verticalTiles int
 var sourceImages []models.SourceImage
 
 func init() {
@@ -30,6 +34,9 @@ func init() {
 	flag.StringVar(&mosaicImagePath, "mosaic_image_path", "image.png", "path of image to create a mosaic from")
 	flag.IntVar(&targetWidth, "target_width", 1024, "default width of image to produce, height will be calculated to maintain aspect ratio")
 	flag.StringVar(&targetImagePath, "target_image_path", "target.png", "path of mosaic image to be created")
+	flag.IntVar(&tileWidth, "tile_width", 32, "default width of mosaic tile")
+	flag.IntVar(&tileHeight, "tile_height", 32, "default height of mosaic tile")
+
 }
 
 var Usage = func() {
@@ -76,7 +83,6 @@ func main() {
 
 }
 
-// calculates
 func calcRelativeImageHeight(originalWidth int, originalHeight int, targetWidth int) int {
 	floatWidth := float64(originalWidth)
 	floatHeight := float64(originalHeight)
@@ -88,4 +94,18 @@ func calcRelativeImageHeight(originalWidth int, originalHeight int, targetWidth 
 	targetHeight := int(adjustedHeight)
 	fmt.Printf("Source width:%d height:%d Target width:%d height:%d\n", originalWidth, originalHeight, targetWidth, targetHeight)
 	return targetHeight
+}
+
+func calcMosaicTiles(targetWidth int, targetHeight int, tileWidth int, tileHeight int) (int, int) {
+
+	horzTiles := targetWidth / tileWidth
+	if targetWidth%tileWidth > 0 {
+		horzTiles++
+	}
+	vertTiles := targetHeight / tileHeight
+	if targetHeight%tileHeight > 0 {
+		vertTiles++
+	}
+	fmt.Printf("Target width:%d height:%d Tile width:%d height:%d Horizontal tiles:%d Vertical tiles:%d\n", targetWidth, targetHeight, tileWidth, tileHeight, horzTiles, vertTiles)
+	return horzTiles, vertTiles
 }
