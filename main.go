@@ -3,7 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
-	goimage "github.com/telecoda/go-saic/image"
+	"github.com/telecoda/go-saic/imageutils"
 	"github.com/telecoda/go-saic/models"
 	"image"
 	"os"
@@ -54,7 +54,7 @@ func main() {
 	fmt.Println("source_dir:", sourceDir)
 	fmt.Println("mosaic_image_path:", mosaicImagePath)
 
-	mosaicImage, _, err := goimage.LoadImage(mosaicImagePath)
+	mosaicImage, _, err := imageutils.LoadImage(mosaicImagePath)
 	if err != nil {
 		fmt.Printf("Error trying to load image:%s Error:%s", mosaicImagePath, err)
 		return
@@ -63,19 +63,19 @@ func main() {
 	targetHeight = calcRelativeImageHeight(mosaicImage.Bounds().Max.X, mosaicImage.Bounds().Max.Y, targetWidth)
 
 	if searchImages {
-		sourceImages = goimage.FindSourceImages(sourceDir)
+		sourceImages = imageutils.FindSourceImages(sourceDir)
 	}
 
 	if createThumbnails {
 		// create a thumbnail for each image
-		goimage.CreateThumbnailImages(sourceImages, thumbnailsDir)
+		imageutils.CreateThumbnailImages(sourceImages, thumbnailsDir)
 	}
 
 	// create target image
-	resizedImage := goimage.ResizeImage(&mosaicImage, uint(targetWidth))
+	resizedImage := imageutils.ResizeImage(&mosaicImage, uint(targetWidth))
 
 	// save image created
-	err = goimage.SaveImage(targetImagePath, &resizedImage)
+	err = imageutils.SaveImage(targetImagePath, &resizedImage)
 	if err != nil {
 		fmt.Printf("Error saving new image:%s Error:%s", targetImagePath, err)
 		return
