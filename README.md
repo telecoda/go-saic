@@ -29,6 +29,8 @@ Work in progress.. this will change a lot.
 
 ##Example usage
 
+###search for pictures, create thumbnail and create a mosaic image
+
     go-saic -s -source_dir data/sourceimages -r -t -mosaic_image_path=data/testimage.png
     
 This command will search the data/sourceimages directory recursively for images.
@@ -36,3 +38,11 @@ This command will search the data/sourceimages directory recursively for images.
 It will create thumbnails images of any images found and they will be saved in the "thumbnail_images" (Default) directory.
 
 Image "data/testimage.png" will be used as a source image to be converted into an image mosaic.
+
+###create a mosaic image
+
+
+    go-saic -t -mosaic_image_path=data/testimage.png -tile_height=64 -tile_width=32 
+    
+    
+tile_width + tile_height parameters are optional

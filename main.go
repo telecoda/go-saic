@@ -72,10 +72,12 @@ func main() {
 	}
 
 	// create target image
-	resizedImage := imageutils.ResizeImage(&mosaicImage, uint(targetWidth))
+	resizedImage := imageutils.ResizeImage(mosaicImage, uint(targetWidth))
 
+	// draw a grid where mosaic tiles should be
+	gridImage := imageutils.DrawGrid(resizedImage, tileWidth, tileHeight)
 	// save image created
-	err = imageutils.SaveImage(targetImagePath, &resizedImage)
+	err = imageutils.SaveImage(targetImagePath, &gridImage)
 	if err != nil {
 		fmt.Printf("Error saving new image:%s Error:%s", targetImagePath, err)
 		return
