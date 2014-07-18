@@ -42,7 +42,7 @@ Image "data/testimage.png" will be used as a source image to be converted into a
 ###create a mosaic image
 
 
-    go-saic -t -mosaic_image_path=data/testimage.png -tile_height=64 -tile_width=32 
+    go-saic -mosaic_image_path=data/testimage.png -tile_height=64 -tile_width=32 
     
     
 tile_width + tile_height parameters are optional

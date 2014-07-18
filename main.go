@@ -46,12 +46,10 @@ var Usage = func() {
 
 func main() {
 	flag.Parse()
-	fmt.Println("searchimages:", searchImages)
 	if searchImages {
 		fmt.Println("search recursively:", recursiveSearch)
 	}
 
-	fmt.Println("source_dir:", sourceDir)
 	fmt.Println("mosaic_image_path:", mosaicImagePath)
 
 	mosaicImage, _, err := imageutils.LoadImage(mosaicImagePath)
@@ -63,6 +61,7 @@ func main() {
 	targetHeight = calcRelativeImageHeight(mosaicImage.Bounds().Max.X, mosaicImage.Bounds().Max.Y, targetWidth)
 
 	if searchImages {
+		fmt.Println("source_dir:", sourceDir)
 		sourceImages = imageutils.FindSourceImages(sourceDir)
 	}
 
@@ -75,10 +74,13 @@ func main() {
 	resizedImage := imageutils.ResizeImage(mosaicImage, uint(targetWidth))
 
 	// draw tiles
-	tiledImage := imageutils.DrawTiles(resizedImage, tileWidth, tileHeight)
+	tiledImage := imageutils.DrawColouredTiles(resizedImage, tileWidth, tileHeight)
+
+	// draw photo tiles
+	photoImage := imageutils.DrawPhotoTiles(tiledImage, tileWidth, tileHeight)
 
 	// draw a grid where mosaic tiles should be
-	gridImage := imageutils.DrawGrid(tiledImage, tileWidth, tileHeight)
+	gridImage := imageutils.DrawGrid(photoImage, tileWidth, tileHeight)
 	// save image created
 	err = imageutils.SaveImage(targetImagePath, &gridImage)
 	if err != nil {
