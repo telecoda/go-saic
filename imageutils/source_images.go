@@ -15,6 +15,7 @@ var sourceImages []models.SourceImage
 
 func FindSourceImages(imageDir string) []models.SourceImage {
 	log.Println("Starting findSourceImages.")
+	log.Printf("Searching in directory:%v", imageDir)
 	fmt.Printf("[")
 
 	sourceImages = make([]models.SourceImage, TOTAL_IMAGES)

@@ -38,3 +38,36 @@ func findProminentColour(myImage image.Image) (color.RGBA, error) {
 
 	return averageColour, nil
 }
+
+func FindColourInTile(sourceImage image.RGBA, targetRect image.Rectangle) color.RGBA {
+
+	var totalRed uint64
+	var totalGreen uint64
+	var totalBlue uint64
+	var totalPixels uint64
+
+	totalRed = 0
+	totalGreen = 0
+	totalBlue = 0
+
+	for y := targetRect.Min.Y; y < targetRect.Max.Y; y++ {
+		for x := targetRect.Min.X; x < targetRect.Max.X; x++ {
+			colour := sourceImage.At(x, y)
+			r, g, b, _ := colour.RGBA()
+			totalRed += uint64(r)
+			totalGreen += uint64(g)
+			totalBlue += uint64(b)
+		}
+	}
+
+	totalPixels = uint64(targetRect.Max.Y * targetRect.Max.X)
+
+	averageRed := totalRed / totalPixels
+	averageGreen := totalGreen / totalPixels
+	averageBlue := totalBlue / totalPixels
+
+	averageColour := color.RGBA{R: uint8(averageRed), G: uint8(averageGreen), B: uint8(averageBlue), A: 255}
+
+	return averageColour
+
+}
