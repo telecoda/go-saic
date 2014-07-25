@@ -1,5 +1,10 @@
 package main
 
+/*
+   go-saic - photomosaic creater
+   by @telecoda
+*/
+
 import (
 	"flag"
 	"fmt"
@@ -9,35 +14,53 @@ import (
 	"os"
 )
 
-var searchImages bool
+// command parameters
+var optDiscoverImages bool
 var recursiveSearch bool
-var createThumbnails bool
 var sourceDir string
+
+var optCreateThumbnails bool
 var thumbnailsDir string
-var mosaicImagePath string
-var mosaicImage image.Image
-var targetImagePath string
-var targetWidth int
-var targetHeight int
+
+var optAnalyseColours bool
+
+var optCreateMosaic bool
+var inputImagePath string
+var inputImage image.Image
+var outputImagePath string
+var outputImageWidth int
+var outputImageHeight int
 var tileWidth int
 var tileHeight int
+
+// others
 var horiontalTiles int
 var verticalTiles int
+
 var sourceImages []models.SourceImage
 
 func init() {
+	// discover images
 	defaultSourceDir := "data" + string(os.PathSeparator) + "input" + string(os.PathSeparator) + "sourceimages"
-	flag.StringVar(&sourceDir, "source_dir", defaultSourceDir, "directory for source images")
-	defaultThumbsDir := "data" + string(os.PathSeparator) + "output" + string(os.PathSeparator) + "thumbnail_images"
-	flag.StringVar(&thumbnailsDir, "thumb_dir", defaultThumbsDir, "directory to produce thumbnails images in")
-	flag.BoolVar(&searchImages, "s", false, "search for images")
+	flag.BoolVar(&optDiscoverImages, "d", false, "search for images in source_dir")
 	flag.BoolVar(&recursiveSearch, "r", false, "search image directories recursively")
-	flag.BoolVar(&createThumbnails, "t", false, "create thumbnails")
-	flag.StringVar(&mosaicImagePath, "mosaic_image_path", "image.png", "path of image to create a mosaic from")
-	flag.IntVar(&targetWidth, "target_width", 1024, "default width of image to produce, height will be calculated to maintain aspect ratio")
-	flag.StringVar(&targetImagePath, "target_image_path", "target.png", "path of mosaic image to be created")
-	flag.IntVar(&tileWidth, "tile_width", 32, "default width of mosaic tile")
-	flag.IntVar(&tileHeight, "tile_height", 32, "default height of mosaic tile")
+	flag.StringVar(&sourceDir, "source_dir", defaultSourceDir, "directory for source images")
+
+	// create thumbnails
+	defaultThumbsDir := "data" + string(os.PathSeparator) + "output" + string(os.PathSeparator) + "thumbnail_images"
+	flag.BoolVar(&optCreateThumbnails, "t", false, "create thumbnails")
+	flag.StringVar(&thumbnailsDir, "thumb_dir", defaultThumbsDir, "directory to create thumbnails images in")
+
+	// analyse colours
+	flag.BoolVar(&optAnalyseColours, "c", false, "Analyse thumbnail images for most prominent colour")
+
+	// create mosaic
+	flag.BoolVar(&optCreateMosaic, "m", false, "Create a photo mosaic image")
+	flag.StringVar(&inputImagePath, "f", "image.png", "path of input image (used to create mosaic from)")
+	flag.IntVar(&outputImageWidth, "output_width", 1024, "default width of image to produce, height will be calculated to maintain aspect ratio")
+	flag.StringVar(&outputImagePath, "o", "output.png", "path of output image")
+	flag.IntVar(&tileWidth, "tile_width", 32, "width of image tiles in output image")
+	flag.IntVar(&tileHeight, "tile_height", 32, "height of image tiles in output image")
 
 }
 
@@ -46,95 +69,60 @@ var Usage = func() {
 	flag.PrintDefaults()
 }
 
-/*
-	The image mosaic creation process involved 3 separate steps.  Not all steps are necessary everytime
-	the process is invoked.
-
-	Step one: Source image discovery
-	================================
-	Prerequisites:- needs a directory containing images.
-
-	This step must be performed at least once.  This is used to discover and catalog the images that will be
-	available as a reference that can be used to create a mosaic from.
-
-	Step two: Source image thumbnail creation
-	=========================================
-	Prerequisites:- needs "discovery" to have run to produce a list of images to process.
-
-	This step must be performed at least once.  It must always be run after step one (discovery).
-	The process creates smaller scaled thumbnails of the source images in a separate working directory.
-
-	Steps one and two can be run in isolation if this is a long running task.
-
-	Step three: Creation of a photo mosaic
-	======================================
-	Prerequisites:- needs "discovery" & "thumbnail" to have run.
-				    need "mosaic_image" - this is the image that will be used a the basis of the photo mosaic
-
-	This step will create a photo mosaic using a source image.
-
-	The process will not update the source "mosaic_image" a new "target_image" will be created.
-
-	Summary of the photo mosaic process:
-	- target image is created as a copy of the source mosaic_image (this can be scaled to a different size)
-	- divide target image into a number of "tiles" based upon the tile height and width parameters
-	- each tile is analysed to find its prominent colour
-	- each tile is replaced with a thumbnail image of a similar colour
-	- repeat for all the tiles on the image
-	- probably have lots of gaps in resulting image due to lack of photos
-	- think of a crafty way of filling the gaps...
-
-*/
 func main() {
 	flag.Parse()
 
 	// initialise request
 
-	// source image discovery
-	// source image transformation
+	if optDiscoverImages {
 
-	// target image creation
-
-	if searchImages {
-		fmt.Println("search recursively:", recursiveSearch)
-	}
-
-	fmt.Println("mosaic_image_path:", mosaicImagePath)
-
-	mosaicImage, _, err := imageutils.LoadImage(mosaicImagePath)
-	if err != nil {
-		fmt.Printf("Error trying to load image:%s Error:%s", mosaicImagePath, err)
-		return
-	}
-
-	targetHeight = calcRelativeImageHeight(mosaicImage.Bounds().Max.X, mosaicImage.Bounds().Max.Y, targetWidth)
-
-	if searchImages {
 		fmt.Println("source_dir:", sourceDir)
 		sourceImages = imageutils.FindSourceImages(sourceDir)
+
 	}
 
-	if createThumbnails {
+	if optCreateThumbnails {
+
 		// create a thumbnail for each image
 		imageutils.CreateThumbnailImages(sourceImages, thumbnailsDir)
+
 	}
 
-	// create target image
-	resizedImage := imageutils.ResizeImage(mosaicImage, uint(targetWidth))
+	if optAnalyseColours {
 
-	// draw tiles
-	tiledImage := imageutils.DrawColouredTiles(resizedImage, tileWidth, tileHeight)
+		// Not implemented yet..
+	}
 
-	// draw photo tiles
-	photoImage := imageutils.DrawPhotoTiles(tiledImage, tileWidth, tileHeight)
+	if optCreateMosaic {
 
-	// draw a grid where mosaic tiles should be
-	gridImage := imageutils.DrawGrid(photoImage, tileWidth, tileHeight)
-	// save image created
-	err = imageutils.SaveImage(targetImagePath, &gridImage)
-	if err != nil {
-		fmt.Printf("Error saving new image:%s Error:%s", targetImagePath, err)
-		return
+		fmt.Println("mosaic_image_path:", inputImagePath)
+
+		inputImage, _, err := imageutils.LoadImage(inputImagePath)
+		if err != nil {
+			fmt.Printf("Error trying to load image:%s Error:%s", inputImagePath, err)
+			return
+		}
+
+		outputImageHeight = calcRelativeImageHeight(inputImage.Bounds().Max.X, inputImage.Bounds().Max.Y, outputImageWidth)
+
+		// create output image
+		resizedImage := imageutils.ResizeImage(inputImage, uint(outputImageWidth))
+
+		// draw tiles
+		tiledImage := imageutils.DrawColouredTiles(resizedImage, tileWidth, tileHeight)
+
+		// draw photo tiles
+		photoImage := imageutils.DrawPhotoTiles(tiledImage, tileWidth, tileHeight)
+
+		// draw a grid where mosaic tiles should be
+		gridImage := imageutils.DrawGrid(photoImage, tileWidth, tileHeight)
+		// save image created
+		err = imageutils.SaveImage(outputImagePath, &gridImage)
+		if err != nil {
+			fmt.Printf("Error saving new image:%s Error:%s", outputImagePath, err)
+			return
+		}
+
 	}
 
 }
