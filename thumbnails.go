@@ -3,13 +3,13 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	//"github.com/nfnt/resize"
-	"github.com/disintegration/imaging"
-	"github.com/telecoda/go-saic/imageutils"
 	"image"
 	"log"
 	"os"
 	"strings"
+
+	"github.com/disintegration/imaging"
+	"github.com/telecoda/go-saic/imageutils"
 )
 
 const THUMBNAIL_WIDTH = 40
@@ -92,6 +92,9 @@ func createThumbnailImage(request ThumbnailRequest) (*ThumbnailResponse, error) 
 	// resize
 	thumbnailImage := ResizeImage(croppedImage, THUMBNAIL_WIDTH, THUMBNAIL_WIDTH)
 
+	// find prominent colour
+	promColour := imageutils.FindProminentColour(thumbnailImage)
+
 	var fullPath string = request.ThumbnailsDir + string(os.PathSeparator) + request.InputImage.Id
 	// remove file extension
 	fullPath = strings.TrimSuffix(fullPath, ".png")
@@ -116,6 +119,9 @@ func createThumbnailImage(request ThumbnailRequest) (*ThumbnailResponse, error) 
 			Size:     0,
 			Width:    request.InputImage.Width,
 			Height:   request.InputImage.Height,
+			Red:      int(promColour.R),
+			Green:    int(promColour.G),
+			Blue:     int(promColour.B),
 		},
 	}
 

@@ -24,16 +24,13 @@ var sourceDir string
 var optCreateThumbnails bool
 var thumbnailsDir string
 
-var optAnalyseColours bool
-
 var optCreateMosaic bool
 var inputImagePath string
 var inputImage image.Image
 var outputImagePath string
 var outputImageWidth int
 var outputImageHeight int
-var tileWidth int
-var tileHeight int
+var tileSize int
 
 // others
 var horiontalTiles int
@@ -56,16 +53,12 @@ func init() {
 	flag.BoolVar(&optCreateThumbnails, "t", false, "create thumbnails")
 	flag.StringVar(&thumbnailsDir, "thumb_dir", defaultThumbsDir, "directory to create thumbnails images in")
 
-	// analyse colours
-	flag.BoolVar(&optAnalyseColours, "c", false, "Analyse thumbnail images for most prominent colour")
-
 	// create mosaic
 	flag.BoolVar(&optCreateMosaic, "m", false, "Create a photo mosaic image")
 	flag.StringVar(&inputImagePath, "f", "image.png", "path of input image (used to create mosaic from)")
 	flag.IntVar(&outputImageWidth, "output_width", 1024, "default width of image to produce, height will be calculated to maintain aspect ratio")
 	flag.StringVar(&outputImagePath, "o", "output.png", "path of output image")
-	flag.IntVar(&tileWidth, "tile_width", 32, "width of image tiles in output image")
-	flag.IntVar(&tileHeight, "tile_height", 32, "height of image tiles in output image")
+	flag.IntVar(&tileSize, "tile_size", 32, "size of image tiles in output image, width & height are the same")
 
 }
 
@@ -111,11 +104,6 @@ func main() {
 
 	}
 
-	if optAnalyseColours {
-
-		// Not implemented yet..
-	}
-
 	if optCreateMosaic {
 
 		fmt.Println("input_image_path:", inputImagePath)
@@ -129,16 +117,16 @@ func main() {
 		outputImageHeight = calcRelativeImageHeight(inputImage.Bounds().Max.X, inputImage.Bounds().Max.Y, outputImageWidth)
 
 		// create output image
-		resizedImage := imageutils.ResizeImage(inputImage, uint(outputImageWidth))
+		resizedImage := ResizeImage(inputImage, outputImageWidth, outputImageHeight)
 
 		// draw tiles
-		tiledImage := imageutils.DrawColouredTiles(resizedImage, tileWidth, tileHeight)
+		tiledImage := imageutils.DrawColouredTiles(resizedImage, tileSize, tileSize)
 
 		// draw photo tiles
-		photoImage := imageutils.DrawPhotoTiles(tiledImage, tileWidth, tileHeight)
+		photoImage := imageutils.DrawPhotoTiles(tiledImage, tileSize, tileSize)
 
 		// draw a grid where mosaic tiles should be
-		gridImage := imageutils.DrawGrid(photoImage, tileWidth, tileHeight)
+		gridImage := imageutils.DrawGrid(photoImage, tileSize, tileSize)
 		// save image created
 		err = imageutils.SaveImage(outputImagePath, &gridImage)
 		if err != nil {
@@ -163,16 +151,16 @@ func calcRelativeImageHeight(originalWidth int, originalHeight int, targetWidth 
 	return targetHeight
 }
 
-func calcMosaicTiles(targetWidth int, targetHeight int, tileWidth int, tileHeight int) (int, int) {
+func calcMosaicTiles(targetWidth int, targetHeight int, tileSize int) (int, int) {
 
-	horzTiles := targetWidth / tileWidth
-	if targetWidth%tileWidth > 0 {
+	horzTiles := targetWidth / tileSize
+	if targetWidth%tileSize > 0 {
 		horzTiles++
 	}
-	vertTiles := targetHeight / tileHeight
-	if targetHeight%tileHeight > 0 {
+	vertTiles := targetHeight / tileSize
+	if targetHeight%tileSize > 0 {
 		vertTiles++
 	}
-	fmt.Printf("Target width:%d height:%d Tile width:%d height:%d Horizontal tiles:%d Vertical tiles:%d\n", targetWidth, targetHeight, tileWidth, tileHeight, horzTiles, vertTiles)
+	fmt.Printf("Target width:%d height:%d Tile width:%d height:%d Horizontal tiles:%d Vertical tiles:%d\n", targetWidth, targetHeight, tileSize, tileSize, horzTiles, vertTiles)
 	return horzTiles, vertTiles
 }

@@ -91,6 +91,21 @@ func initDB() {
 		fmt.Printf("Info: Building index on thumbnailImagesColl - %s\n", err)
 	}
 
+	if err := thumbnailImagesColl.dbCol.Index([]string{"red"}); err != nil {
+		// index already exists - ignore error
+		fmt.Printf("Info: Building index on thumbnailImagesColl - %s\n", err)
+	}
+
+	if err := thumbnailImagesColl.dbCol.Index([]string{"blue"}); err != nil {
+		// index already exists - ignore error
+		fmt.Printf("Info: Building index on thumbnailImagesColl - %s\n", err)
+	}
+
+	if err := thumbnailImagesColl.dbCol.Index([]string{"green"}); err != nil {
+		// index already exists - ignore error
+		fmt.Printf("Info: Building index on thumbnailImagesColl - %s\n", err)
+	}
+
 }
 
 func listDB() {
@@ -148,7 +163,11 @@ func (c *collection) saveImage(image ImageDetail) (int, error) {
 	return c.dbCol.Insert(map[string]interface{}{
 		"id":       image.Id,
 		"filename": image.Filename,
-		"filepath": image.FilePath})
+		"filepath": image.FilePath,
+		"red":      image.Red,
+		"green":    image.Green,
+		"blue":     image.Blue,
+	})
 }
 
 func (c *collection) findImageByPath(filePath string) *ImageDetail {
@@ -174,6 +193,9 @@ func (c *collection) findImageByPath(filePath string) *ImageDetail {
 			Id:       result["id"].(string),
 			FilePath: result["filepath"].(string),
 			Filename: result["filename"].(string),
+			Red:      result["red"].(int),
+			Green:    result["green"].(int),
+			Blue:     result["blue"].(int),
 		}
 		return imageDetail
 	}

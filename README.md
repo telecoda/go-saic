@@ -22,20 +22,19 @@ That's it.
 
 ##Command options
 
-    Usage of ./go-saic:
-      -c=false: Analyse thumbnail images for most prominent colour
-      -d=false: search for images in source_dir
-      -f="image.png": path of input image (used to create mosaic from)
-      -m=false: Create a photo mosaic image
-      -o="output.png": path of output image
-      -output_width=1024: default width of image to produce, height will be calculated to maintain aspect ratio
-      -r=false: search image directories recursively
-      -source_dir="data/input/sourceimages": directory for source images
-      -t=false: create thumbnails
-      -thumb_dir="data/output/thumbnail_images": directory to create thumbnails images in
-      -tile_height=32: height of image tiles in output image
-      -tile_width=32: width of image tiles in output image
-      
+    -R=false: repair & compact db
+    -X=false: clear image db
+    -d=false: search for images in source_dir
+    -f="image.png": path of input image (used to create mosaic from)
+    -l=false: list image db content
+    -m=false: Create a photo mosaic image
+    -o="output.png": path of output image
+    -output_width=1024: default width of image to produce, height will be calculated to maintain aspect ratio
+    -r=false: search image directories recursively
+    -source_dir="data/input/sourceimages": directory for source images
+    -t=false: create thumbnails
+    -thumb_dir="data/output/thumbnail_images": directory to create thumbnails images in
+    -tile_size=32: size of image tiles in output image, width & height are the same      
 ##Example usage
 
 ###search for pictures, create thumbnail and create a mosaic image
@@ -75,8 +74,8 @@ The process creates smaller scaled thumbnails of the source images in a separate
 
 Steps one and two can be run in isolation if this is a long running task.
 
-###Step three: Thumbnail image colour analysis (-c)
-* Prerequisites:- needs "thumbnailing" to have run to produce a list of images to process.
+###Step three: Thumbnail image colour analysis
+This is run as part of the thumbnailing process.
 
 This step will analyse the thumbails that have been produced and create and calculate the most prominent colour in the image.
 

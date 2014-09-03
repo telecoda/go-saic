@@ -5,7 +5,7 @@ import (
 	"image/color"
 )
 
-func findProminentColour(myImage image.Image) (color.RGBA, error) {
+func FindProminentColour(myImage image.Image) color.RGBA {
 
 	var totalRed uint64
 	var totalGreen uint64
@@ -36,7 +36,7 @@ func findProminentColour(myImage image.Image) (color.RGBA, error) {
 
 	averageColour := color.RGBA{R: uint8(averageRed), G: uint8(averageGreen), B: uint8(averageBlue), A: 255}
 
-	return averageColour, nil
+	return averageColour
 }
 
 func FindColourInTile(sourceImage image.RGBA, targetRect image.Rectangle) color.RGBA {
