@@ -6,6 +6,8 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+
+	"code.google.com/p/go-uuid/uuid"
 )
 
 func DiscoverImages(request DiscoveryRequest) (DiscoveryResponse, error) {
@@ -28,6 +30,7 @@ func DiscoverImages(request DiscoveryRequest) (DiscoveryResponse, error) {
 				strings.HasSuffix(filename, ".gif") {
 				fmt.Printf(".")
 				sourceImage := new(ImageDetail)
+				sourceImage.Id = uuid.New()
 				sourceImage.FilePath = path
 				sourceImage.Filename = fileInfo.Name()
 				sourceImage.Size = fileInfo.Size()

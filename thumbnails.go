@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/nfnt/resize"
 	"github.com/telecoda/go-saic/imageutils"
@@ -12,8 +13,8 @@ import (
 
 const THUMBNAIL_WIDTH = 40
 
-// create a thumbnail for each image in request
-func CreateThumbnails(images []ImageDetail, thumbnailImagesDir string) ([]ImageDetail, error) {
+// create a thumbnail for each image in db
+func CreateThumbnails(thumbnailImagesDir string) error {
 
 	log.Println("Starting CreateThumbnails.")
 	fmt.Printf("[")
@@ -23,31 +24,42 @@ func CreateThumbnails(images []ImageDetail, thumbnailImagesDir string) ([]ImageD
 	if _, err := os.Stat(thumbnailImagesDir); err != nil {
 		err := os.Mkdir(thumbnailImagesDir, 0777)
 		if err != nil {
-			return nil, err
+			return err
 		}
 	}
 
-	// create a list of thumbnail images
-	thumbnails := make([]ImageDetail, 0)
-	for _, inputImage := range images {
+	// get a list of discoveredImages from the DB
+	discoveredImagesColl.dbCol.ForEachDoc(func(id int, docContent []byte) (willMoveOn bool) {
 
+		var inputImage ImageDetail
+
+		if json.Unmarshal(docContent, &inputImage) != nil {
+			fmt.Println("cannot deserialize!")
+			return false
+		}
+
+		// create a thumbnail for this image
 		request := ThumbnailRequest{
 			InputImage:    inputImage,
 			Width:         THUMBNAIL_WIDTH,
 			ThumbnailsDir: thumbnailImagesDir,
 		}
 
-		response, err := createThumbnailImage(request)
+		outputImage, err := createThumbnailImage(request)
 		if err != nil {
-			return nil, err
+			fmt.Printf("Error: problem creating thumbnail - %v \n", err)
+			return true
 		}
 
-		thumbnails = append(thumbnails, response.ThumbnailImage)
+		fmt.Print(".")
+		thumbnailImagesColl.saveImage(outputImage.ThumbnailImage)
 
-	}
+		return true  // move on to the next document OR
+		return false // do not move on to the next document
+	})
 
-	return thumbnails, nil
-
+	fmt.Println("]")
+	return nil
 }
 func createThumbnailImage(request ThumbnailRequest) (*ThumbnailResponse, error) {
 
@@ -65,7 +77,7 @@ func createThumbnailImage(request ThumbnailRequest) (*ThumbnailResponse, error) 
 	// resize
 	thumbnailImage := resize.Resize(THUMBNAIL_WIDTH, 0, loadedImage, resize.Lanczos3)
 
-	var fullPath string = request.ThumbnailsDir + string(os.PathSeparator) + request.InputImage.Filename
+	var fullPath string = request.ThumbnailsDir + string(os.PathSeparator) + request.InputImage.Id
 	// remove file extension
 	fullPath = strings.TrimSuffix(fullPath, ".png")
 	fullPath = strings.TrimSuffix(fullPath, ".jpg")
@@ -82,6 +94,7 @@ func createThumbnailImage(request ThumbnailRequest) (*ThumbnailResponse, error) 
 
 	response := &ThumbnailResponse{
 		ThumbnailImage: ImageDetail{
+			Id:       request.InputImage.Id,
 			FilePath: fullPath,
 			Filename: request.InputImage.Filename,
 			Format:   request.InputImage.Format,

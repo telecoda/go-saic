@@ -4,8 +4,9 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/HouzuoGuo/tiedot/db"
 	"os"
+
+	"github.com/HouzuoGuo/tiedot/db"
 )
 
 var imagesDBDir = "/tmp/go-saic/db"
@@ -34,6 +35,19 @@ func initDB() {
 		panic(err)
 	}
 
+	if optClearDB {
+		// drop collections
+		fmt.Println("Info: clearing existing db content")
+		if err := imagesDB.Drop(discoveredCollectionName); err != nil {
+			fmt.Printf("Info: Dropping discoveredImagesColl - %s\n", err)
+
+		}
+		if err := imagesDB.Drop(thumbnailCollectionName); err != nil {
+			fmt.Printf("Info: Dropping thumbnailImagesColl - %s\n", err)
+		}
+
+	}
+
 	// Create two collections:
 	if err := imagesDB.Create(discoveredCollectionName); err != nil {
 		// collections already exists - ignore error
@@ -45,14 +59,16 @@ func initDB() {
 		fmt.Printf("Info: Creating thumbnailImagesColl - %s\n", err)
 	}
 
-	// Scrub (repair and compact) collections
-	fmt.Printf("Scrubbing: %s collection\n", discoveredCollectionName)
-	if err := imagesDB.Scrub(discoveredCollectionName); err != nil {
-		panic(err)
-	}
-	fmt.Printf("Scrubbing: %s collection\n", thumbnailCollectionName)
-	if err := imagesDB.Scrub(thumbnailCollectionName); err != nil {
-		panic(err)
+	if optScrubDB {
+		// Scrub (repair and compact) collections
+		fmt.Printf("Scrubbing: %s collection\n", discoveredCollectionName)
+		if err := imagesDB.Scrub(discoveredCollectionName); err != nil {
+			panic(err)
+		}
+		fmt.Printf("Scrubbing: %s collection\n", thumbnailCollectionName)
+		if err := imagesDB.Scrub(thumbnailCollectionName); err != nil {
+			panic(err)
+		}
 	}
 
 	discoveredImagesColl = &collection{
@@ -77,21 +93,21 @@ func initDB() {
 
 }
 
-func queryDB() {
-	// ****************** Document Management ******************
+func listDB() {
 
-	discImageCount := discoveredImagesColl.dbCol.ApproxDocCount()
-
-	thumbImageCount := thumbnailImagesColl.dbCol.ApproxDocCount()
-
-	fmt.Printf("DiscoveredImages: %d\n", discImageCount)
-	fmt.Printf("ThumbnailImages: %d\n", thumbImageCount)
-
-	// list images
 	fmt.Println("DiscoveredImages")
 	fmt.Println("================")
-	// Process all documents (note that document order is undetermined)
+
 	discoveredImagesColl.dbCol.ForEachDoc(func(id int, docContent []byte) (willMoveOn bool) {
+		fmt.Println("Document", id, "is", string(docContent))
+		return true  // move on to the next document OR
+		return false // do not move on to the next document
+	})
+
+	fmt.Println("ThumbnailImages")
+	fmt.Println("===============")
+
+	thumbnailImagesColl.dbCol.ForEachDoc(func(id int, docContent []byte) (willMoveOn bool) {
 		fmt.Println("Document", id, "is", string(docContent))
 		return true  // move on to the next document OR
 		return false // do not move on to the next document
@@ -130,6 +146,7 @@ func (c *collection) saveImage(image ImageDetail) (int, error) {
 	}
 	// Insert document (afterwards the docID uniquely identifies the document and will never change)
 	return c.dbCol.Insert(map[string]interface{}{
+		"id":       image.Id,
 		"filename": image.Filename,
 		"filepath": image.FilePath})
 }
@@ -154,6 +171,7 @@ func (c *collection) findImageByPath(filePath string) *ImageDetail {
 			panic(err)
 		}
 		imageDetail := &ImageDetail{
+			Id:       result["id"].(string),
 			FilePath: result["filepath"].(string),
 			Filename: result["filename"].(string),
 		}

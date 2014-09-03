@@ -15,6 +15,9 @@ import (
 )
 
 // command parameters
+var optClearDB bool
+var optListDB bool
+var optScrubDB bool
 var optDiscoverImages bool
 var recursiveSearch bool
 var sourceDir string
@@ -42,6 +45,11 @@ var sourceImages []models.SourceImage
 var discoveredImages []ImageDetail
 
 func init() {
+	// db
+	flag.BoolVar(&optClearDB, "X", false, "clear image db")
+	flag.BoolVar(&optListDB, "l", false, "list image db content")
+	flag.BoolVar(&optScrubDB, "R", false, "repair & compact db")
+
 	// discover images
 	defaultSourceDir := "data" + string(os.PathSeparator) + "input" + string(os.PathSeparator) + "sourceimages"
 	flag.BoolVar(&optDiscoverImages, "d", false, "search for images in source_dir")
@@ -73,10 +81,13 @@ var Usage = func() {
 
 func main() {
 
-	initDB()
-	//queryDB()
-
 	flag.Parse()
+
+	initDB()
+
+	if optListDB {
+		listDB()
+	}
 
 	// initialise request
 
@@ -98,7 +109,7 @@ func main() {
 
 	if optCreateThumbnails {
 
-		_, err := CreateThumbnails(discoveredImages, thumbnailsDir)
+		err := CreateThumbnails(thumbnailsDir)
 
 		if err != nil {
 			fmt.Printf("Error creating image thumbnails. Error:%s\n", err)

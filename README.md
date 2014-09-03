@@ -9,6 +9,16 @@ I know there are a gazillion free image mosaic utilies out there.  I decided to 
 To get command parameters type:
 
     go-saic -?
+    
+##Building
+First fetch all the dependencies:
+
+
+    go get -u -v
+   
+    go build
+
+That's it.   
 
 ##Command options
 
