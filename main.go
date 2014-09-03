@@ -39,6 +39,8 @@ var verticalTiles int
 
 var sourceImages []models.SourceImage
 
+var discoveredImages []ImageDetail
+
 func init() {
 	// discover images
 	defaultSourceDir := "data" + string(os.PathSeparator) + "input" + string(os.PathSeparator) + "sourceimages"
@@ -70,21 +72,40 @@ var Usage = func() {
 }
 
 func main() {
+
+	initDB()
+	//queryDB()
+
 	flag.Parse()
 
 	// initialise request
 
 	if optDiscoverImages {
 
-		fmt.Println("source_dir:", sourceDir)
-		sourceImages = imageutils.FindSourceImages(sourceDir)
+		request := &DiscoveryRequest{
+			sourceImagesPath: sourceDir,
+		}
+
+		response, err := DiscoverImages(*request)
+		if err != nil {
+			fmt.Printf("Error trying to discover images. Error:%s\n", err)
+			return
+		}
+
+		discoveredImages = response.imagesDiscovered
 
 	}
 
 	if optCreateThumbnails {
 
+		_, err := CreateThumbnails(discoveredImages, thumbnailsDir)
+
+		if err != nil {
+			fmt.Printf("Error creating image thumbnails. Error:%s\n", err)
+			return
+		}
 		// create a thumbnail for each image
-		imageutils.CreateThumbnailImages(sourceImages, thumbnailsDir)
+		//imageutils.CreateThumbnailImages(sourceImages, thumbnailsDir)
 
 	}
 
@@ -95,7 +116,7 @@ func main() {
 
 	if optCreateMosaic {
 
-		fmt.Println("mosaic_image_path:", inputImagePath)
+		fmt.Println("input_image_path:", inputImagePath)
 
 		inputImage, _, err := imageutils.LoadImage(inputImagePath)
 		if err != nil {
