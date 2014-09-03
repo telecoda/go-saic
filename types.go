@@ -22,6 +22,11 @@ type ImageDetail struct {
 	Size     int64
 	Width    int
 	Height   int
+	// these are the average values of colours
+	// to help find similar imagess
+	Red   int
+	Blue  int
+	Green int
 }
 
 // thumbnailing

@@ -9,7 +9,6 @@ import (
 	"flag"
 	"fmt"
 	"github.com/telecoda/go-saic/imageutils"
-	"github.com/telecoda/go-saic/models"
 	"image"
 	"os"
 )
@@ -39,10 +38,6 @@ var tileHeight int
 // others
 var horiontalTiles int
 var verticalTiles int
-
-var sourceImages []models.SourceImage
-
-var discoveredImages []ImageDetail
 
 func init() {
 	// db
@@ -97,13 +92,11 @@ func main() {
 			sourceImagesPath: sourceDir,
 		}
 
-		response, err := DiscoverImages(*request)
+		_, err := DiscoverImages(*request)
 		if err != nil {
 			fmt.Printf("Error trying to discover images. Error:%s\n", err)
 			return
 		}
-
-		discoveredImages = response.imagesDiscovered
 
 	}
 
@@ -115,8 +108,6 @@ func main() {
 			fmt.Printf("Error creating image thumbnails. Error:%s\n", err)
 			return
 		}
-		// create a thumbnail for each image
-		//imageutils.CreateThumbnailImages(sourceImages, thumbnailsDir)
 
 	}
 
