@@ -3,7 +3,8 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/nfnt/resize"
+	//"github.com/nfnt/resize"
+	"github.com/disintegration/imaging"
 	"github.com/telecoda/go-saic/imageutils"
 	"image"
 	"log"
@@ -63,6 +64,9 @@ func CreateThumbnails(thumbnailImagesDir string) error {
 }
 func createThumbnailImage(request ThumbnailRequest) (*ThumbnailResponse, error) {
 
+	/* Note: for now all thumbnails will be square
+	   as it just makes everything much easier...
+	*/
 	loadedImage, format, err := imageutils.LoadImage(request.InputImage.FilePath)
 	if err != nil {
 		log.Printf("Error during createThumbnailImage: %s", err)
@@ -74,8 +78,19 @@ func createThumbnailImage(request ThumbnailRequest) (*ThumbnailResponse, error) 
 	request.InputImage.Height = loadedImage.Bounds().Max.Y
 	request.InputImage.Format = format
 
+	// crop image to centre square
+	// take size of smallest dimension
+	var squareSize int
+	if request.InputImage.Width <= request.InputImage.Height {
+		squareSize = request.InputImage.Width
+	} else {
+		squareSize = request.InputImage.Height
+	}
+
+	croppedImage := imaging.CropCenter(loadedImage, squareSize, squareSize)
+
 	// resize
-	thumbnailImage := resize.Resize(THUMBNAIL_WIDTH, 0, loadedImage, resize.Lanczos3)
+	thumbnailImage := ResizeImage(croppedImage, THUMBNAIL_WIDTH, THUMBNAIL_WIDTH)
 
 	var fullPath string = request.ThumbnailsDir + string(os.PathSeparator) + request.InputImage.Id
 	// remove file extension
@@ -116,8 +131,9 @@ func createThumbnailImage(request ThumbnailRequest) (*ThumbnailResponse, error) 
 
 }
 
-func ResizeImage(originalImage image.Image, newWidth uint) image.Image {
+func ResizeImage(originalImage image.Image, newWidth int, newHeight int) image.Image {
 
-	return resize.Resize(newWidth, 0, originalImage, resize.Lanczos3)
+	//return resize.Resize(newWidth, 0, originalImage, resize.Lanczos3)
+	return imaging.Resize(originalImage, newWidth, newHeight, imaging.BSpline)
 
 }
