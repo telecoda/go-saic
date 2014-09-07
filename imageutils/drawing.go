@@ -5,6 +5,8 @@ import (
 	"image/color"
 	"image/draw"
 	"log"
+
+	"github.com/telecoda/go-saic/models"
 )
 
 // Create a new image with grid lines drawn over it
@@ -41,38 +43,26 @@ func DrawGrid(sourceImage image.Image, tileWidth int, tileHeight int) image.Imag
 	return gridImage
 }
 
-// Create a new image with tiles filled in
-func DrawColouredTiles(sourceImage image.Image, tileWidth int, tileHeight int) image.Image {
-
-	log.Println("Drawing coloured tiles.")
+func drawColouredTiles(sourceImage image.Image, imageTiles *[][]models.ImageTile) image.Image {
 
 	// convert sourceImage to RGBA image
 	bounds := sourceImage.Bounds()
-	tiledImage := image.NewRGBA(image.Rect(0, 0, bounds.Dx(), bounds.Dy()))
-	draw.Draw(tiledImage, tiledImage.Bounds(), sourceImage, bounds.Min, draw.Src)
+	colouredImage := image.NewRGBA(image.Rect(0, 0, bounds.Dx(), bounds.Dy()))
+	draw.Draw(colouredImage, colouredImage.Bounds(), sourceImage, bounds.Min, draw.Src)
 
-	// draw tiles
-	for x := 0; x < bounds.Dx(); x += tileWidth {
-		for y := 0; y < bounds.Dy(); y += tileHeight {
+	for _, tiles := range *imageTiles {
+		for _, tile := range tiles {
 
-			// pick a colour from within current tile
-
-			//TODO improve the colour picking algorithm to something more sophisticated than
-			//  the first pixel in the tile
-			tileColour := tiledImage.At(x, y)
-
-			tileBounds := image.Rect(x, y, x+tileWidth, y+tileHeight)
-
-			draw.Draw(tiledImage, tileBounds, &image.Uniform{tileColour}, image.ZP, draw.Src)
+			draw.Draw(colouredImage, tile.Rect, &image.Uniform{tile.ProminentColour}, image.ZP, draw.Src)
 
 		}
 	}
 
-	return tiledImage
+	return colouredImage
 }
 
 // Create a new image tiles consisting of photos of a similar colour
-func DrawPhotoTiles(sourceImage image.Image, tileWidth int, tileHeight int) image.Image {
+/*func DrawPhotoTiles(sourceImage image.Image, tileWidth int, tileHeight int) image.Image {
 
 	log.Println("Drawing photo tiles.")
 
@@ -85,10 +75,14 @@ func DrawPhotoTiles(sourceImage image.Image, tileWidth int, tileHeight int) imag
 	for x := 0; x < bounds.Dx(); x += tileWidth {
 		for y := 0; y < bounds.Dy(); y += tileHeight {
 
-			// pick a colour from within current tile
-			tileColour := photoImage.At(x, y)
+			targetRect := image.Rectangle{
+				image.Point{x, y},
+				image.Point{x + tileWidth, y + tileHeight},
+			}
+			tileColour := FindColourInTile(*photoImage, targetRect)
+			log.Printf("Tile rect:%v colour:%v\n", targetRect, tileColour)
 
-			tileBounds := image.Rect(x, y, x+tileWidth, y+tileHeight)
+			tileBounds := image.Rect(x, y, x+tileWidth-1, y+tileHeight-1)
 
 			draw.Draw(photoImage, tileBounds, &image.Uniform{tileColour}, image.ZP, draw.Src)
 
@@ -96,4 +90,4 @@ func DrawPhotoTiles(sourceImage image.Image, tileWidth int, tileHeight int) imag
 	}
 
 	return photoImage
-}
+}*/

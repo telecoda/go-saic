@@ -8,17 +8,16 @@ import (
 	"strings"
 
 	"code.google.com/p/go-uuid/uuid"
+
+	"github.com/telecoda/go-saic/db"
+	"github.com/telecoda/go-saic/models"
 )
 
-func DiscoverImages(request DiscoveryRequest) (DiscoveryResponse, error) {
+func DiscoverImages(sourceImagesPath string) error {
 
 	log.Println("Starting image discovery")
-	log.Printf("Searching in directory:%v", request.sourceImagesPath)
+	log.Printf("Searching in directory:%v", sourceImagesPath)
 	fmt.Printf("[")
-
-	response := new(DiscoveryResponse)
-
-	response.imagesDiscovered = make([]ImageDetail, 0)
 
 	myWalkFunc := func(path string, fileInfo os.FileInfo, err error) error {
 
@@ -29,15 +28,14 @@ func DiscoverImages(request DiscoveryRequest) (DiscoveryResponse, error) {
 				strings.HasSuffix(filename, ".png") ||
 				strings.HasSuffix(filename, ".gif") {
 				fmt.Printf(".")
-				sourceImage := new(ImageDetail)
+				sourceImage := new(models.ImageDetail)
 				sourceImage.Id = uuid.New()
 				sourceImage.FilePath = path
 				sourceImage.Filename = fileInfo.Name()
 				sourceImage.Size = fileInfo.Size()
-				response.imagesDiscovered = append(response.imagesDiscovered, *sourceImage)
 
 				// save to db as we go...
-				discoveredImagesColl.saveImage(*sourceImage)
+				db.DiscoveredImagesColl.SaveImage(*sourceImage)
 
 			}
 
@@ -45,10 +43,10 @@ func DiscoverImages(request DiscoveryRequest) (DiscoveryResponse, error) {
 		return nil
 	}
 
-	filepath.Walk(request.sourceImagesPath, myWalkFunc)
+	filepath.Walk(sourceImagesPath, myWalkFunc)
 
 	fmt.Println("]")
 	log.Println("Ending image discovery.")
 
-	return *response, nil
+	return nil
 }

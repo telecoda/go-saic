@@ -1,4 +1,4 @@
-package main
+package db
 
 import (
 	"encoding/json"
@@ -7,6 +7,8 @@ import (
 	"os"
 
 	"github.com/HouzuoGuo/tiedot/db"
+
+	"github.com/telecoda/go-saic/models"
 )
 
 var imagesDBDir = "/tmp/go-saic/db"
@@ -15,15 +17,15 @@ var imagesDB db.DB
 var discoveredCollectionName = "DiscoveredImages"
 var thumbnailCollectionName = "ThumbnailImages"
 
-var discoveredImagesColl *collection
-var thumbnailImagesColl *collection
+var DiscoveredImagesColl *collection
+var ThumbnailImagesColl *collection
 
 type collection struct {
-	name  string
-	dbCol *db.Col
+	Name  string
+	DbCol *db.Col
 }
 
-func initDB() {
+func InitDB(optClearDB bool, optScrubDB bool) {
 	// ****************** Collection Management ******************
 
 	//os.RemoveAll(myDBDir)
@@ -39,11 +41,11 @@ func initDB() {
 		// drop collections
 		fmt.Println("Info: clearing existing db content")
 		if err := imagesDB.Drop(discoveredCollectionName); err != nil {
-			fmt.Printf("Info: Dropping discoveredImagesColl - %s\n", err)
+			fmt.Printf("Info: Dropping DiscoveredImagesColl - %s\n", err)
 
 		}
 		if err := imagesDB.Drop(thumbnailCollectionName); err != nil {
-			fmt.Printf("Info: Dropping thumbnailImagesColl - %s\n", err)
+			fmt.Printf("Info: Dropping ThumbnailImagesColl - %s\n", err)
 		}
 
 	}
@@ -51,12 +53,12 @@ func initDB() {
 	// Create two collections:
 	if err := imagesDB.Create(discoveredCollectionName); err != nil {
 		// collections already exists - ignore error
-		fmt.Printf("Info: Creating discoveredImagesColl - %s\n", err)
+		fmt.Printf("Info: Creating DiscoveredImagesColl - %s\n", err)
 
 	}
 	if err := imagesDB.Create(thumbnailCollectionName); err != nil {
 		// collection already exists - ignore error
-		fmt.Printf("Info: Creating thumbnailImagesColl - %s\n", err)
+		fmt.Printf("Info: Creating ThumbnailImagesColl - %s\n", err)
 	}
 
 	if optScrubDB {
@@ -71,49 +73,49 @@ func initDB() {
 		}
 	}
 
-	discoveredImagesColl = &collection{
-		name:  discoveredCollectionName,
-		dbCol: imagesDB.Use(discoveredCollectionName),
+	DiscoveredImagesColl = &collection{
+		Name:  discoveredCollectionName,
+		DbCol: imagesDB.Use(discoveredCollectionName),
 	}
 
-	thumbnailImagesColl = &collection{
-		name:  thumbnailCollectionName,
-		dbCol: imagesDB.Use(thumbnailCollectionName),
+	ThumbnailImagesColl = &collection{
+		Name:  thumbnailCollectionName,
+		DbCol: imagesDB.Use(thumbnailCollectionName),
 	}
 
 	// Create indexes
-	if err := discoveredImagesColl.dbCol.Index([]string{"filepath"}); err != nil {
+	if err := DiscoveredImagesColl.DbCol.Index([]string{"filepath"}); err != nil {
 		// index already exists - ignore error
-		fmt.Printf("Info: Building index on discoveredImagesColl - %s\n", err)
+		fmt.Printf("Info: Building index on DiscoveredImagesColl - %s\n", err)
 	}
-	if err := thumbnailImagesColl.dbCol.Index([]string{"filepath"}); err != nil {
+	if err := ThumbnailImagesColl.DbCol.Index([]string{"filepath"}); err != nil {
 		// index already exists - ignore error
-		fmt.Printf("Info: Building index on thumbnailImagesColl - %s\n", err)
-	}
-
-	if err := thumbnailImagesColl.dbCol.Index([]string{"red"}); err != nil {
-		// index already exists - ignore error
-		fmt.Printf("Info: Building index on thumbnailImagesColl - %s\n", err)
+		fmt.Printf("Info: Building index on ThumbnailImagesColl - %s\n", err)
 	}
 
-	if err := thumbnailImagesColl.dbCol.Index([]string{"blue"}); err != nil {
+	if err := ThumbnailImagesColl.DbCol.Index([]string{"red"}); err != nil {
 		// index already exists - ignore error
-		fmt.Printf("Info: Building index on thumbnailImagesColl - %s\n", err)
+		fmt.Printf("Info: Building index on ThumbnailImagesColl - %s\n", err)
 	}
 
-	if err := thumbnailImagesColl.dbCol.Index([]string{"green"}); err != nil {
+	if err := ThumbnailImagesColl.DbCol.Index([]string{"blue"}); err != nil {
 		// index already exists - ignore error
-		fmt.Printf("Info: Building index on thumbnailImagesColl - %s\n", err)
+		fmt.Printf("Info: Building index on ThumbnailImagesColl - %s\n", err)
+	}
+
+	if err := ThumbnailImagesColl.DbCol.Index([]string{"green"}); err != nil {
+		// index already exists - ignore error
+		fmt.Printf("Info: Building index on ThumbnailImagesColl - %s\n", err)
 	}
 
 }
 
-func listDB() {
+func ListDB() {
 
 	fmt.Println("DiscoveredImages")
 	fmt.Println("================")
 
-	discoveredImagesColl.dbCol.ForEachDoc(func(id int, docContent []byte) (willMoveOn bool) {
+	DiscoveredImagesColl.DbCol.ForEachDoc(func(id int, docContent []byte) (willMoveOn bool) {
 		fmt.Println("Document", id, "is", string(docContent))
 		return true  // move on to the next document OR
 		return false // do not move on to the next document
@@ -122,7 +124,7 @@ func listDB() {
 	fmt.Println("ThumbnailImages")
 	fmt.Println("===============")
 
-	thumbnailImagesColl.dbCol.ForEachDoc(func(id int, docContent []byte) (willMoveOn bool) {
+	ThumbnailImagesColl.DbCol.ForEachDoc(func(id int, docContent []byte) (willMoveOn bool) {
 		fmt.Println("Document", id, "is", string(docContent))
 		return true  // move on to the next document OR
 		return false // do not move on to the next document
@@ -130,13 +132,13 @@ func listDB() {
 
 }
 
-func (c *collection) saveImages(images []ImageDetail) error {
+func (c *collection) SaveImages(images []models.ImageDetail) error {
 
 	fmt.Println("Saving images to collection:")
 	for _, imageDetail := range images {
 
 		fmt.Printf("Info: Saving image - %s\n", imageDetail.FilePath)
-		docId, err := c.saveImage(imageDetail)
+		docId, err := c.SaveImage(imageDetail)
 
 		if err != nil {
 
@@ -152,7 +154,7 @@ func (c *collection) saveImages(images []ImageDetail) error {
 	return nil
 }
 
-func (c *collection) saveImage(image ImageDetail) (int, error) {
+func (c *collection) SaveImage(image models.ImageDetail) (int, error) {
 
 	// check if image already exists for filepath
 	imageFound := c.findImageByPath(image.FilePath)
@@ -160,7 +162,7 @@ func (c *collection) saveImage(image ImageDetail) (int, error) {
 		return 0, errors.New("Image already exists.")
 	}
 	// Insert document (afterwards the docID uniquely identifies the document and will never change)
-	return c.dbCol.Insert(map[string]interface{}{
+	return c.DbCol.Insert(map[string]interface{}{
 		"id":       image.Id,
 		"filename": image.Filename,
 		"filepath": image.FilePath,
@@ -170,7 +172,7 @@ func (c *collection) saveImage(image ImageDetail) (int, error) {
 	})
 }
 
-func (c *collection) findImageByPath(filePath string) *ImageDetail {
+func (c *collection) findImageByPath(filePath string) *models.ImageDetail {
 	var query interface{}
 	queryString := fmt.Sprintf(`{"eq": "%s", "in": ["filepath"]}`, filePath)
 
@@ -178,18 +180,18 @@ func (c *collection) findImageByPath(filePath string) *ImageDetail {
 
 	queryResult := make(map[int]struct{}) // query result (document IDs) goes into map keys
 
-	if err := db.EvalQuery(query, c.dbCol, &queryResult); err != nil {
+	if err := db.EvalQuery(query, c.DbCol, &queryResult); err != nil {
 		panic(err)
 	}
 
 	// Query result are document IDs
 	for id := range queryResult {
 		// To get query result document, simply read it
-		result, err := c.dbCol.Read(id)
+		result, err := c.DbCol.Read(id)
 		if err != nil {
 			panic(err)
 		}
-		imageDetail := &ImageDetail{
+		imageDetail := &models.ImageDetail{
 			Id:       result["id"].(string),
 			FilePath: result["filepath"].(string),
 			Filename: result["filename"].(string),

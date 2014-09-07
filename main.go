@@ -1,16 +1,18 @@
 package main
 
 /*
-   go-saic - photomosaic creater
+   go-saic - photomosaic generator
    by @telecoda
 */
 
 import (
 	"flag"
 	"fmt"
-	"github.com/telecoda/go-saic/imageutils"
 	"image"
 	"os"
+
+	"github.com/telecoda/go-saic/db"
+	"github.com/telecoda/go-saic/imageutils"
 )
 
 // command parameters
@@ -71,21 +73,17 @@ func main() {
 
 	flag.Parse()
 
-	initDB()
+	db.InitDB(optClearDB, optScrubDB)
 
 	if optListDB {
-		listDB()
+		db.ListDB()
 	}
 
 	// initialise request
 
 	if optDiscoverImages {
 
-		request := &DiscoveryRequest{
-			sourceImagesPath: sourceDir,
-		}
-
-		_, err := DiscoverImages(*request)
+		err := DiscoverImages(sourceDir)
 		if err != nil {
 			fmt.Printf("Error trying to discover images. Error:%s\n", err)
 			return
@@ -95,7 +93,7 @@ func main() {
 
 	if optCreateThumbnails {
 
-		err := CreateThumbnails(thumbnailsDir)
+		err := imageutils.CreateThumbnails(thumbnailsDir)
 
 		if err != nil {
 			fmt.Printf("Error creating image thumbnails. Error:%s\n", err)
@@ -106,61 +104,12 @@ func main() {
 
 	if optCreateMosaic {
 
-		fmt.Println("input_image_path:", inputImagePath)
-
-		inputImage, _, err := imageutils.LoadImage(inputImagePath)
+		err := imageutils.CreateImageMosaic(inputImagePath, outputImagePath, outputImageWidth, tileSize)
 		if err != nil {
-			fmt.Printf("Error trying to load image:%s Error:%s", inputImagePath, err)
-			return
-		}
-
-		outputImageHeight = calcRelativeImageHeight(inputImage.Bounds().Max.X, inputImage.Bounds().Max.Y, outputImageWidth)
-
-		// create output image
-		resizedImage := ResizeImage(inputImage, outputImageWidth, outputImageHeight)
-
-		// draw tiles
-		tiledImage := imageutils.DrawColouredTiles(resizedImage, tileSize, tileSize)
-
-		// draw photo tiles
-		photoImage := imageutils.DrawPhotoTiles(tiledImage, tileSize, tileSize)
-
-		// draw a grid where mosaic tiles should be
-		gridImage := imageutils.DrawGrid(photoImage, tileSize, tileSize)
-		// save image created
-		err = imageutils.SaveImage(outputImagePath, &gridImage)
-		if err != nil {
-			fmt.Printf("Error saving new image:%s Error:%s", outputImagePath, err)
+			fmt.Printf("Error creating image mosaic:%s Error:%s", outputImagePath, err)
 			return
 		}
 
 	}
 
-}
-
-func calcRelativeImageHeight(originalWidth int, originalHeight int, targetWidth int) int {
-	floatWidth := float64(originalWidth)
-	floatHeight := float64(originalHeight)
-
-	aspectRatio := float64(targetWidth) / floatWidth
-
-	adjustedHeight := floatHeight * aspectRatio
-
-	targetHeight := int(adjustedHeight)
-	fmt.Printf("Source width:%d height:%d Target width:%d height:%d\n", originalWidth, originalHeight, targetWidth, targetHeight)
-	return targetHeight
-}
-
-func calcMosaicTiles(targetWidth int, targetHeight int, tileSize int) (int, int) {
-
-	horzTiles := targetWidth / tileSize
-	if targetWidth%tileSize > 0 {
-		horzTiles++
-	}
-	vertTiles := targetHeight / tileSize
-	if targetHeight%tileSize > 0 {
-		vertTiles++
-	}
-	fmt.Printf("Target width:%d height:%d Tile width:%d height:%d Horizontal tiles:%d Vertical tiles:%d\n", targetWidth, targetHeight, tileSize, tileSize, horzTiles, vertTiles)
-	return horzTiles, vertTiles
 }

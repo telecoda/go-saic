@@ -1,4 +1,4 @@
-package main
+package imageutils
 
 import (
 	"encoding/json"
@@ -9,7 +9,9 @@ import (
 	"strings"
 
 	"github.com/disintegration/imaging"
-	"github.com/telecoda/go-saic/imageutils"
+
+	"github.com/telecoda/go-saic/db"
+	"github.com/telecoda/go-saic/models"
 )
 
 const THUMBNAIL_WIDTH = 40
@@ -30,9 +32,9 @@ func CreateThumbnails(thumbnailImagesDir string) error {
 	}
 
 	// get a list of discoveredImages from the DB
-	discoveredImagesColl.dbCol.ForEachDoc(func(id int, docContent []byte) (willMoveOn bool) {
+	db.DiscoveredImagesColl.DbCol.ForEachDoc(func(id int, docContent []byte) (willMoveOn bool) {
 
-		var inputImage ImageDetail
+		var inputImage models.ImageDetail
 
 		if json.Unmarshal(docContent, &inputImage) != nil {
 			fmt.Println("cannot deserialize!")
@@ -53,7 +55,7 @@ func CreateThumbnails(thumbnailImagesDir string) error {
 		}
 
 		fmt.Print(".")
-		thumbnailImagesColl.saveImage(outputImage.ThumbnailImage)
+		db.ThumbnailImagesColl.SaveImage(outputImage.ThumbnailImage)
 
 		return true  // move on to the next document OR
 		return false // do not move on to the next document
@@ -67,7 +69,7 @@ func createThumbnailImage(request ThumbnailRequest) (*ThumbnailResponse, error) 
 	/* Note: for now all thumbnails will be square
 	   as it just makes everything much easier...
 	*/
-	loadedImage, format, err := imageutils.LoadImage(request.InputImage.FilePath)
+	loadedImage, format, err := LoadImage(request.InputImage.FilePath)
 	if err != nil {
 		log.Printf("Error during createThumbnailImage: %s", err)
 		return nil, err
@@ -93,7 +95,7 @@ func createThumbnailImage(request ThumbnailRequest) (*ThumbnailResponse, error) 
 	thumbnailImage := ResizeImage(croppedImage, THUMBNAIL_WIDTH, THUMBNAIL_WIDTH)
 
 	// find prominent colour
-	promColour := imageutils.FindProminentColour(thumbnailImage)
+	promColour := FindProminentColour(thumbnailImage)
 
 	var fullPath string = request.ThumbnailsDir + string(os.PathSeparator) + request.InputImage.Id
 	// remove file extension
@@ -104,14 +106,14 @@ func createThumbnailImage(request ThumbnailRequest) (*ThumbnailResponse, error) 
 	// all saved as .png files
 	fullPath += ".png"
 
-	err = imageutils.SaveImage(fullPath, &thumbnailImage)
+	err = SaveImage(fullPath, &thumbnailImage)
 	if err != nil {
 		log.Printf("Error creating PNG thumbnail: %s\n", err)
 		return nil, err
 	}
 
 	response := &ThumbnailResponse{
-		ThumbnailImage: ImageDetail{
+		ThumbnailImage: models.ImageDetail{
 			Id:       request.InputImage.Id,
 			FilePath: fullPath,
 			Filename: request.InputImage.Filename,
@@ -125,14 +127,6 @@ func createThumbnailImage(request ThumbnailRequest) (*ThumbnailResponse, error) 
 		},
 	}
 
-	/*
-		promColor, err := findProminentColour(thumbnailImage)
-		if err != nil {
-			log.Printf("Error finding prominent colour: %s", err)
-			return nil, err
-		}
-	*/
-	//	sourceImage.ProminentColour = promColor
 	return response, nil
 
 }
