@@ -132,6 +132,68 @@ func ListDB() {
 
 }
 
+func getMinMaxColour(value int, accuracy int) (int, int) {
+	// determine range of colours to search for
+	minVal := value - accuracy
+	maxVal := value + accuracy
+
+	if minVal < 0 {
+		minVal = 0
+	}
+
+	if maxVal > 255 {
+		maxVal = 255
+	}
+
+	return minVal, maxVal
+}
+
+func FindSimilarColourImages(red, green, blue, accuracy int) *[]models.ImageDetail {
+
+	redMinVal, redMaxVal := getMinMaxColour(red, accuracy)
+	greenMinVal, greenMaxVal := getMinMaxColour(green, accuracy)
+	blueMinVal, blueMaxVal := getMinMaxColour(blue, accuracy)
+
+	var query interface{}
+	// subqueries
+	// {"n": [sub-query1, sub-query2..]}
+
+	//queryString := fmt.Sprintf(`{"int-from": %d, "int-to": %d, "in": ["%s"]}`, minVal, maxVal, colourColumn)
+	queryString := fmt.Sprintf(`{"n":[ {"int-from": %d, "int-to": %d, "in": ["red"]} , {"int-from": %d, "int-to": %d, "in": ["green"]}, {"int-from": %d, "int-to": %d, "in": ["blue"]}]}`,
+		redMinVal, redMaxVal, greenMinVal, greenMaxVal, blueMinVal, blueMaxVal)
+
+	json.Unmarshal([]byte(queryString), &query)
+
+	queryResult := make(map[int]struct{}) // query result (document IDs) goes into map keys
+
+	if err := db.EvalQuery(query, ThumbnailImagesColl.DbCol, &queryResult); err != nil {
+		panic(err)
+	}
+
+	foundImages := make([]models.ImageDetail, 0)
+
+	// Query result are document IDs
+	for id := range queryResult {
+		// To get query result document, simply read it
+		result, err := ThumbnailImagesColl.DbCol.Read(id)
+		if err != nil {
+			panic(err)
+		}
+		imageDetail := &models.ImageDetail{
+			Id:       result["id"].(string),
+			FilePath: result["filepath"].(string),
+			Filename: result["filename"].(string),
+			Red:      int(result["red"].(float64)),
+			Green:    int(result["green"].(float64)),
+			Blue:     int(result["blue"].(float64)),
+		}
+		foundImages = append(foundImages, *imageDetail)
+	}
+
+	return &foundImages
+
+}
+
 func (c *collection) SaveImages(images []models.ImageDetail) error {
 
 	fmt.Println("Saving images to collection:")
@@ -166,9 +228,9 @@ func (c *collection) SaveImage(image models.ImageDetail) (int, error) {
 		"id":       image.Id,
 		"filename": image.Filename,
 		"filepath": image.FilePath,
-		"red":      image.Red,
-		"green":    image.Green,
-		"blue":     image.Blue,
+		"red":      int(image.Red),
+		"green":    int(image.Green),
+		"blue":     int(image.Blue),
 	})
 }
 

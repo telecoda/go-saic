@@ -21,10 +21,9 @@ type ImageDetail struct {
 }
 
 type ImageTile struct {
-	X                    int
-	Y                    int
-	Rect                 image.Rectangle
-	ProminentColour      color.RGBA
-	SimilarImageId       string
-	SimilarImageFilename string
+	X               int
+	Y               int
+	Rect            image.Rectangle
+	ProminentColour color.RGBA
+	SimilarImages   *[]ImageDetail
 }

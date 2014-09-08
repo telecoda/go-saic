@@ -5,6 +5,7 @@ import (
 	"image/color"
 	"log"
 
+	"github.com/telecoda/go-saic/db"
 	"github.com/telecoda/go-saic/models"
 )
 
@@ -33,14 +34,17 @@ func CreateImageMosaic(inputImagePath string, outputImagePath string, outputImag
 	// analyse input image colours
 	analysedTiles := analyseImageTileColours(resizedImage, imageTiles)
 
+	// update tiles with details of similar images
+	preparedTiles := updateSimilarColourImages(analysedTiles)
+
 	// draw colour tiles
-	colouredImage := drawColouredTiles(resizedImage, &analysedTiles)
+	colouredImage := drawColouredTiles(resizedImage, &preparedTiles)
 
 	// draw photo tiles
-	//photoImage := DrawPhotoTiles(resizedImage, tileSize, tileSize)
+	photoImage := drawPhotoTiles(colouredImage, &preparedTiles)
 
 	// draw a grid where mosaic tiles should be
-	gridImage := DrawGrid(colouredImage, tileSize, tileSize)
+	gridImage := DrawGrid(photoImage, tileSize, tileSize)
 	// save image created
 	err = SaveImage(outputImagePath, &gridImage)
 	return err
@@ -123,4 +127,25 @@ func analyseImageTileColours(sourceImage image.Image, imageTiles [][]models.Imag
 	}
 
 	return imageTiles
+}
+
+func updateSimilarColourImages(imageTiles [][]models.ImageTile) [][]models.ImageTile {
+
+	for _, tiles := range imageTiles {
+		for _, tile := range tiles {
+
+			imageTiles[tile.X][tile.Y].SimilarImages = findSimilarColourImages(tile.ProminentColour)
+
+		}
+	}
+
+	return imageTiles
+}
+
+func findSimilarColourImages(colourToMatch color.RGBA) *[]models.ImageDetail {
+
+	accuracy := 10
+	// search for images with similar amount of Red
+	return db.FindSimilarColourImages(int(colourToMatch.R), int(colourToMatch.G), int(colourToMatch.B), accuracy)
+
 }
