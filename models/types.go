@@ -25,5 +25,8 @@ type ImageTile struct {
 	Y               int
 	Rect            image.Rectangle
 	ProminentColour color.RGBA
-	SimilarImages   *[]ImageDetail
+	// SimilarImages used in 'matched' mosaic image
+	SimilarImages *[]ImageDetail //
+	// ThumbnailImage used in 'tinted' mosaic image
+	ThumbnailImage *ImageDetail // Image that will be render in the tile
 }

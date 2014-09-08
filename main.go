@@ -27,6 +27,7 @@ var optCreateThumbnails bool
 var thumbnailsDir string
 
 var optCreateMosaic bool
+var optMosaicType string
 var inputImagePath string
 var inputImage image.Image
 var outputImagePath string
@@ -57,6 +58,7 @@ func init() {
 
 	// create mosaic
 	flag.BoolVar(&optCreateMosaic, "m", false, "Create a photo mosaic image")
+	flag.StringVar(&optMosaicType, "type", "matched", "Type of mosaic (tinted or matched)")
 	flag.StringVar(&inputImagePath, "f", "image.png", "path of input image (used to create mosaic from)")
 	flag.IntVar(&outputImageWidth, "output_width", 1024, "default width of image to produce, height will be calculated to maintain aspect ratio")
 	flag.StringVar(&outputImagePath, "o", "output.png", "path of output image")
@@ -72,6 +74,11 @@ var Usage = func() {
 func main() {
 
 	flag.Parse()
+
+	if optMosaicType != "matched" && optMosaicType != "tinted" {
+		fmt.Println("Error: -type parameter must be 'tinted' or 'matched'")
+		return
+	}
 
 	db.InitDB(optClearDB, optScrubDB)
 
@@ -104,7 +111,7 @@ func main() {
 
 	if optCreateMosaic {
 
-		err := imageutils.CreateImageMosaic(inputImagePath, outputImagePath, outputImageWidth, tileSize)
+		err := imageutils.CreateImageMosaic(inputImagePath, outputImagePath, outputImageWidth, tileSize, optMosaicType)
 		if err != nil {
 			fmt.Printf("Error creating image mosaic:%s Error:%s", outputImagePath, err)
 			return

@@ -9,7 +9,7 @@ import (
 	"github.com/telecoda/go-saic/models"
 )
 
-func CreateImageMosaic(inputImagePath string, outputImagePath string, outputImageWidth int, tileSize int) error {
+func CreateImageMosaic(inputImagePath string, outputImagePath string, outputImageWidth int, tileSize int, mosaicType string) error {
 
 	log.Println("input_image_path:", inputImagePath)
 
@@ -31,23 +31,54 @@ func CreateImageMosaic(inputImagePath string, outputImagePath string, outputImag
 
 	//log.Printf("ImageTiles:%v", imageTiles)
 
-	// analyse input image colours
-	analysedTiles := analyseImageTileColours(resizedImage, imageTiles)
+	// create a compilation of tinted greyscale images
+	if mosaicType == "tinted" {
 
-	// update tiles with details of similar images
-	preparedTiles := updateSimilarColourImages(analysedTiles)
+		log.Printf("Creating a tinted mosaic image")
 
-	// draw colour tiles
-	//colouredImage := drawColouredTiles(resizedImage, &preparedTiles)
+		// analyse input image colours
+		analysedTiles := analyseImageTileColours(resizedImage, imageTiles)
 
-	// draw photo tiles
-	photoImage := drawPhotoTiles(resizedImage, &preparedTiles, tileSize)
+		// update tiles with details of similar images
+		preparedTiles := updateThumbnailImages(analysedTiles)
 
-	// draw a grid where mosaic tiles should be
-	gridImage := DrawGrid(photoImage, tileSize, tileSize)
-	// save image created
-	err = SaveImage(outputImagePath, &gridImage)
-	return err
+		// draw photo tiles
+		photoImage := drawTintedPhotoTiles(resizedImage, &preparedTiles, tileSize)
+
+		// draw a grid where mosaic tiles should be
+		gridImage := DrawGrid(photoImage, tileSize, tileSize)
+
+		// save image created
+		err = SaveImage(outputImagePath, &gridImage)
+		return err
+
+	}
+
+	// create a mosaic from images of a similar colour
+	if mosaicType == "matched" {
+
+		log.Printf("Creating a colour matched mosaic image")
+
+		// analyse input image colours
+		analysedTiles := analyseImageTileColours(resizedImage, imageTiles)
+
+		// update tiles with details of similar images
+		preparedTiles := updateSimilarColourImages(analysedTiles)
+
+		// draw photo tiles
+		photoImage := drawPhotoTiles(resizedImage, &preparedTiles, tileSize)
+
+		// draw a grid where mosaic tiles should be
+		gridImage := DrawGrid(photoImage, tileSize, tileSize)
+
+		// save image created
+		err = SaveImage(outputImagePath, &gridImage)
+		return err
+
+	}
+
+	return nil
+
 }
 
 func calcRelativeImageHeight(originalWidth int, originalHeight int, targetWidth int) int {
@@ -135,6 +166,28 @@ func updateSimilarColourImages(imageTiles [][]models.ImageTile) [][]models.Image
 		for _, tile := range tiles {
 
 			imageTiles[tile.X][tile.Y].SimilarImages = findSimilarColourImages(tile.ProminentColour)
+
+		}
+	}
+
+	return imageTiles
+}
+
+func updateThumbnailImages(imageTiles [][]models.ImageTile) [][]models.ImageTile {
+
+	// get all thumbnails
+	thumbnails := db.FindAllThumbnailImages()
+
+	maxImageIndex := len(thumbnails)
+	currentImageIndex := 0
+
+	for _, tiles := range imageTiles {
+		for _, tile := range tiles {
+			imageTiles[tile.X][tile.Y].ThumbnailImage = &thumbnails[currentImageIndex]
+			currentImageIndex++
+			if currentImageIndex >= maxImageIndex {
+				currentImageIndex = 0
+			}
 
 		}
 	}

@@ -6,6 +6,8 @@ import (
 	"image/draw"
 	"log"
 
+	"github.com/disintegration/imaging"
+
 	"github.com/telecoda/go-saic/models"
 )
 
@@ -93,33 +95,41 @@ func drawPhotoTiles(sourceImage image.Image, imageTiles *[][]models.ImageTile, t
 	return photoImage
 }
 
-// Create a new image tiles consisting of photos of a similar colour
-/*func DrawPhotoTiles(sourceImage image.Image, tileWidth int, tileHeight int) image.Image {
-
-	log.Println("Drawing photo tiles.")
+func drawTintedPhotoTiles(sourceImage image.Image, imageTiles *[][]models.ImageTile, tileWidth int) image.Image {
 
 	// convert sourceImage to RGBA image
 	bounds := sourceImage.Bounds()
-	photoImage := image.NewRGBA(image.Rect(0, 0, bounds.Dx(), bounds.Dy()))
-	draw.Draw(photoImage, photoImage.Bounds(), sourceImage, bounds.Min, draw.Src)
+	photoImage := image.NewNRGBA(image.Rect(0, 0, bounds.Dx(), bounds.Dy()))
+	//draw.Draw(photoImage, photoImage.Bounds(), sourceImage, bounds.Min, draw.Src)
 
-	// draw tiles
-	for x := 0; x < bounds.Dx(); x += tileWidth {
-		for y := 0; y < bounds.Dy(); y += tileHeight {
+	for _, tiles := range *imageTiles {
+		for _, tile := range tiles {
 
-			targetRect := image.Rectangle{
-				image.Point{x, y},
-				image.Point{x + tileWidth, y + tileHeight},
+			// draw image using thumbnail
+			if tile.ThumbnailImage != nil {
+				//
+				tileImage, _, err := LoadImage(tile.ThumbnailImage.FilePath)
+				if err != nil {
+					panic("Error loading image")
+				}
+				// resize image to tile size
+				resizedImage := ResizeImage(tileImage, tileWidth, tileWidth)
+
+				// create grayscale version
+				grayscaleImage := imaging.Grayscale(resizedImage)
+				draw.Draw(photoImage, tile.Rect, grayscaleImage, tileImage.Bounds().Min, draw.Src)
+
+				tintedImage := image.NewRGBA(image.Rect(0, 0, tile.Rect.Dx(), tile.Rect.Dy()))
+				draw.Draw(tintedImage, image.Rect(0, 0, tile.Rect.Dx(), tile.Rect.Dy()), &image.Uniform{tile.ProminentColour}, image.ZP, draw.Src)
+				// 50% alpha
+				//tile.ProminentColour.A = 128
+				// draw a tinted square over the top to match the original colour
+				photoImage = imaging.Overlay(photoImage, tintedImage, tile.Rect.Min, 0.5)
+
 			}
-			tileColour := FindColourInTile(*photoImage, targetRect)
-			log.Printf("Tile rect:%v colour:%v\n", targetRect, tileColour)
-
-			tileBounds := image.Rect(x, y, x+tileWidth-1, y+tileHeight-1)
-
-			draw.Draw(photoImage, tileBounds, &image.Uniform{tileColour}, image.ZP, draw.Src)
 
 		}
 	}
 
 	return photoImage
-}*/
+}
