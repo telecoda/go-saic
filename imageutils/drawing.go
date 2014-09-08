@@ -61,7 +61,7 @@ func drawColouredTiles(sourceImage image.Image, imageTiles *[][]models.ImageTile
 	return colouredImage
 }
 
-func drawPhotoTiles(sourceImage image.Image, imageTiles *[][]models.ImageTile) image.Image {
+func drawPhotoTiles(sourceImage image.Image, imageTiles *[][]models.ImageTile, tileWidth int) image.Image {
 
 	// convert sourceImage to RGBA image
 	bounds := sourceImage.Bounds()
@@ -71,8 +71,21 @@ func drawPhotoTiles(sourceImage image.Image, imageTiles *[][]models.ImageTile) i
 	for _, tiles := range *imageTiles {
 		for _, tile := range tiles {
 
-			// find an image of a similar colour
-			draw.Draw(photoImage, tile.Rect, &image.Uniform{tile.ProminentColour}, image.ZP, draw.Src)
+			// draw image using first tile discovered
+			if tile.SimilarImages != nil {
+				//
+				for _, similarImage := range *tile.SimilarImages {
+					tileImage, _, err := LoadImage(similarImage.FilePath)
+					if err != nil {
+						panic("Error loading image")
+					}
+					// resize image to tile size
+					resizedImage := ResizeImage(tileImage, tileWidth, tileWidth)
+					draw.Draw(photoImage, tile.Rect, resizedImage, tileImage.Bounds().Min, draw.Src)
+					break
+				}
+
+			}
 
 		}
 	}

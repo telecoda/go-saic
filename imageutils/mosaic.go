@@ -38,10 +38,10 @@ func CreateImageMosaic(inputImagePath string, outputImagePath string, outputImag
 	preparedTiles := updateSimilarColourImages(analysedTiles)
 
 	// draw colour tiles
-	colouredImage := drawColouredTiles(resizedImage, &preparedTiles)
+	//colouredImage := drawColouredTiles(resizedImage, &preparedTiles)
 
 	// draw photo tiles
-	photoImage := drawPhotoTiles(colouredImage, &preparedTiles)
+	photoImage := drawPhotoTiles(resizedImage, &preparedTiles, tileSize)
 
 	// draw a grid where mosaic tiles should be
 	gridImage := DrawGrid(photoImage, tileSize, tileSize)
@@ -144,8 +144,17 @@ func updateSimilarColourImages(imageTiles [][]models.ImageTile) [][]models.Image
 
 func findSimilarColourImages(colourToMatch color.RGBA) *[]models.ImageDetail {
 
-	accuracy := 10
+	var similarImages *[]models.ImageDetail
+	accuracy := 0
 	// search for images with similar amount of Red
-	return db.FindSimilarColourImages(int(colourToMatch.R), int(colourToMatch.G), int(colourToMatch.B), accuracy)
+	for similarImages == nil {
+		accuracy += 10
+		if accuracy > 255 {
+			return nil
+		}
 
+		similarImages = db.FindSimilarColourImages(int(colourToMatch.R), int(colourToMatch.G), int(colourToMatch.B), accuracy)
+	}
+
+	return similarImages
 }

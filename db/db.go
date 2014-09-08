@@ -190,7 +190,10 @@ func FindSimilarColourImages(red, green, blue, accuracy int) *[]models.ImageDeta
 		foundImages = append(foundImages, *imageDetail)
 	}
 
-	return &foundImages
+	if len(foundImages) > 0 {
+		return &foundImages
+	}
+	return nil
 
 }
 
