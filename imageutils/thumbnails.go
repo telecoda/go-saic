@@ -14,7 +14,7 @@ import (
 	"github.com/telecoda/go-saic/models"
 )
 
-const THUMBNAIL_WIDTH = 40
+const THUMBNAIL_WIDTH = 64
 
 // create a thumbnail for each image in db
 func CreateThumbnails(thumbnailImagesDir string) error {
