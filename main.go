@@ -58,7 +58,7 @@ func init() {
 
 	// create mosaic
 	flag.BoolVar(&optCreateMosaic, "m", false, "Create a photo mosaic image")
-	flag.StringVar(&optMosaicType, "type", "matched", "Type of mosaic (tinted or matched)")
+	flag.StringVar(&optMosaicType, "type", "tinted", "Type of mosaic (tinted or matched)")
 	flag.StringVar(&inputImagePath, "f", "image.png", "path of input image (used to create mosaic from)")
 	flag.IntVar(&outputImageWidth, "output_width", 1024, "default width of image to produce, height will be calculated to maintain aspect ratio")
 	flag.StringVar(&outputImagePath, "o", "output.png", "path of output image")

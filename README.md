@@ -1,10 +1,12 @@
 #go-saic
+<a href="https://dl.dropboxusercontent.com/u/13846060/go-saic-gopher.png"><img src="https://dl.dropboxusercontent.com/u/13846060/go-saic-gopher-scaled.png" alt="go-saic gopher" align="right"/></a>
 
 Written by @telecoda
 
 Image mosaic generator in go-lang
 
 I know there are a gazillion free image mosaic utilies out there.  I decided to write this as an interesting coding exercise.
+
 
 To get command parameters type:
 
@@ -40,19 +42,21 @@ That's it.
 
 ###search for pictures, create thumbnail and create a mosaic image
 
-    go-saic -d -source_dir data/input/sourceimages/ -r -t -f=data/input/testimages/testimage.png -m    
+    go-saic -d -source_dir data/input/sourceimages/ -r -t -f=data/input/testimages/testimage.png -m -type=tinted
 This command will discover images in the data/input/sourceimages directory recursively.
 
 It will create thumbnails images of any images found and they will be saved in the "./data/output/thumbnail_images" (Default) directory.
 
 Image "data/testimage.png" will be used as a source image to be converted into an image mosaic.
 
+The default output image name is "output.png"
+
 ###create a mosaic image
 
-	go-saic -m -f=data/input/testimages/testimage.png -tile_height=64 -tile_width=32 -type=tinted
+	go-saic -m -f=data/input/testimages/testimage.png -tile_size=64 -type=tinted
     
     
-tile_width + tile_height parameters are optional
+tile_size parameter is optional
 
 
 
@@ -64,8 +68,7 @@ This section describes the basic functionality of the software:
 
 * Prerequisites:- needs a directory containing images.
 
-This step must be performed at least once.  This is used to discover and catalog the images that will be
-available as a reference that can be used to create a mosaic from.
+This step must be performed at least once.  This is used to discover and catalog the images that will be available as a reference that can be used to create a mosaic from.
 
 ###Step two: Source image thumbnail creation (-t)
 * Prerequisites:- needs "discovery" to have run to produce a list of images to process.
@@ -78,7 +81,7 @@ Steps one and two can be run in isolation if this is a long running task.
 ###Step three: Thumbnail image colour analysis
 This is run as part of the thumbnailing process.
 
-This step will analyse the thumbails that have been produced and create and calculate the most prominent colour in the image.
+This step will analyse the thumbails that have been produced and calculate the most prominent colour in the image.  Thumbnail details will be stored in the image DB.
 
 ###Step four: Creation of a photo mosaic (-m)
 * Prerequisites:- needs "discovery" & "thumbnail" to have run.
@@ -86,16 +89,16 @@ This step will analyse the thumbails that have been produced and create and calc
 
 This step will create a photo mosaic using a source image.
 
-The process will not update the source "mosaic_image" a new "target_image" will be created.
+The process will not update the "source_image" a new image will be created. (Option -o allows you to specific a filename)
 
 go-saic supports two different methods for rendering mosaics
 
-"matched" & "tinted"
+**"matched" & "tinted"**
 
 ##Image DB
-go-saic creates a simple database of images during the discovery process.  This is stored locally in a JSON database using tiedot [link here]
-
-It the database doesn't exist it will be created.  To trash and rebuild the database use:-
+go-saic creates a simple database of images during the discovery and thumbnailing processes.  This is stored locally in a JSON database using [tiedot nosql db in golang
+](https://github.com/HouzuoGuo/tiedot)
+If the database doesn't exist it will be created.  To trash and rebuild the database use:-
 
     go-saic -X
     
@@ -113,16 +116,17 @@ The mosaic type is specified using the -type parameter
     -type=matched
 
 ###type=matched
+
 To create a matched mosaic the following process occurs:-
 
 * target image is created as a copy of the source mosaic_image (this can be scaled to a different size)
 * divide target image into a number of "tiles" based upon the tile_size parameter
 * each tile is analysed to find its prominent colour
-* search thumbnails DB for images of a similar colour (this looks for a close match then gets progressively more relaxed.  Therefore if there is no decent match you could end up with anything!)
+* search thumbnails DB for images of a similar colour (this looks for a close match then gets progressively more relaxed.  Therefore if there are no decent matches you could end up with anything!)
 * For each image tile, scale the thumbnail image to match the tile_size and draw it
 
 ###type=tinted
-When using a small set of images you'll probably not get a decent match so a little jiggery-pokery is necessary....
+When using a small set of images you'll probably not get a decent match so a little jiggery-pokery is necessary....  This is how tinted mosaics came about.
 
 To create a tinted mosaic the following process occurs:-
 

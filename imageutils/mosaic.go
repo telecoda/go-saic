@@ -113,10 +113,10 @@ func initImageTiles(targetWidth int, targetHeight int, tileSize int) [][]models.
 	horzTiles, vertTiles := calcMosaicTiles(targetWidth, targetHeight, tileSize)
 	log.Printf("Tiles horizontal:%d vertical:%d", horzTiles, vertTiles)
 	// create a 2d array of imageTiles
-	imageTiles := make([][]models.ImageTile, vertTiles)
+	imageTiles := make([][]models.ImageTile, horzTiles)
 	// Loop over the rows, allocating the slice for each row.
 	for i := range imageTiles {
-		imageTiles[i] = make([]models.ImageTile, horzTiles)
+		imageTiles[i] = make([]models.ImageTile, vertTiles)
 	}
 
 	// populate tiles with correct co-ordinates
