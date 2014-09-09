@@ -34,7 +34,8 @@ That's it.
     -source_dir="data/input/sourceimages": directory for source images
     -t=false: create thumbnails
     -thumb_dir="data/output/thumbnail_images": directory to create thumbnails images in
-    -tile_size=32: size of image tiles in output image, width & height are the same      
+    -tile_size=32: size of image tiles in output image, width & height are the same
+    -type="matched": Type of mosaic (tinted or matched)      
 ##Example usage
 
 ###search for pictures, create thumbnail and create a mosaic image
@@ -48,7 +49,7 @@ Image "data/testimage.png" will be used as a source image to be converted into a
 
 ###create a mosaic image
 
-	go-saic -m -f=data/input/testimages/testimage.png -tile_height=64 -tile_width=32 
+	go-saic -m -f=data/input/testimages/testimage.png -tile_height=64 -tile_width=32 -type=tinted
     
     
 tile_width + tile_height parameters are optional
@@ -87,13 +88,66 @@ This step will create a photo mosaic using a source image.
 
 The process will not update the source "mosaic_image" a new "target_image" will be created.
 
-Summary of the photo mosaic process:
+go-saic supports two different methods for rendering mosaics
+
+"matched" & "tinted"
+
+##Image DB
+go-saic creates a simple database of images during the discovery process.  This is stored locally in a JSON database using tiedot [link here]
+
+It the database doesn't exist it will be created.  To trash and rebuild the database use:-
+
+    go-saic -X
+    
+You can list the content of the db like this:-
+
+    go-saic -l 
+
+
+##Mosaic Types
+go-saic supports two different photo mosaic types
+
+The mosaic type is specified using the -type parameter
+    
+    -type=tinted
+    -type=matched
+
+###type=matched
+To create a matched mosaic the following process occurs:-
 
 * target image is created as a copy of the source mosaic_image (this can be scaled to a different size)
-* divide target image into a number of "tiles" based upon the tile height and width parameters
+* divide target image into a number of "tiles" based upon the tile_size parameter
 * each tile is analysed to find its prominent colour
-* each tile is replaced with a thumbnail image of a similar colour
-* repeat for all the tiles on the image
-* probably have lots of gaps in resulting image due to lack of photos
-* think of a crafty way of filling the gaps...    
+* search thumbnails DB for images of a similar colour (this looks for a close match then gets progressively more relaxed.  Therefore if there is no decent match you could end up with anything!)
+* For each image tile, scale the thumbnail image to match the tile_size and draw it
 
+###type=tinted
+When using a small set of images you'll probably not get a decent match so a little jiggery-pokery is necessary....
+
+To create a tinted mosaic the following process occurs:-
+
+* target image is created as a copy of the source mosaic_image (this can be scaled to a different size)
+* divide target image into a number of "tiles" based upon the tile_size parameter
+* each tile is analysed to find its prominent colour
+* get a list of ALL thumbnail images (we don't want anyone missed out..)
+* for each image tile allocate a thumbnail image. If we run out of images, go back to start and repeat images (they'll never notice...)
+* For each image tile, scale the thumbnail image to match the tile_size
+* Then convert the scaled image to a greyscale versions
+* Then create a separate transparent image with the prominent colour from the original image in this tile location
+* Merge the two together and you get a nice tinted image of the scaled thumbnail
+* It should bear some resemblance the original image
+
+##Other notes
+There are other options that let you tweak the output such as:
+
+    -output_width=2048   // this will scale the size of the output image
+    -tile_size=64        // this alters the size of tiles draw
+
+##Thumbnail tips
+Thumbnails are always square.  Maybe it was me being lazy but it makes the whole process MUCH easier.  The minimum dimension is chosen as the size and then a square is cropped from the centre of the image.
+
+Thumbnails are always 128x128 pixel.  I was lazy and didn't want to add another parameter.  Maybe I will one day...
+
+Finally:-  I NEVER delete thumbnails.  Using the -X option will delete the database but NOT the thumbnail images.  If they are not referenced in the DB they won't be used.
+
+The reason I did this is that photos are very precious and I didn't want someone using my software with the wrong directory path at deleting their photos.  I'll leave it in YOUR capable hands to delete files you don't want....
