@@ -46,10 +46,10 @@ func CreateImageMosaic(inputImagePath string, outputImagePath string, outputImag
 		photoImage := drawTintedPhotoTiles(resizedImage, &preparedTiles, tileSize)
 
 		// draw a grid where mosaic tiles should be
-		gridImage := DrawGrid(photoImage, tileSize, tileSize)
+		//gridImage := DrawGrid(photoImage, tileSize, tileSize)
 
 		// save image created
-		err = SaveImage(outputImagePath, &gridImage)
+		err = SaveImage(outputImagePath, &photoImage)
 		return err
 
 	}

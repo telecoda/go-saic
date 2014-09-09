@@ -124,7 +124,7 @@ func drawTintedPhotoTiles(sourceImage image.Image, imageTiles *[][]models.ImageT
 				// 50% alpha
 				//tile.ProminentColour.A = 128
 				// draw a tinted square over the top to match the original colour
-				photoImage = imaging.Overlay(photoImage, tintedImage, tile.Rect.Min, 0.5)
+				photoImage = imaging.Overlay(photoImage, tintedImage, tile.Rect.Min, 0.65)
 
 			}
 
