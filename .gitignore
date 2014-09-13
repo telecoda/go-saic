@@ -7,7 +7,7 @@ output.png
 # Folders
 _obj
 _test
-
+data/output
 # Architecture specific extensions/prefixes
 *.[568vq]
 [568vq].out
