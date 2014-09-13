@@ -179,6 +179,11 @@ func updateThumbnailImages(imageTiles [][]models.ImageTile) [][]models.ImageTile
 	thumbnails := db.FindAllThumbnailImages()
 
 	maxImageIndex := len(thumbnails)
+
+	if maxImageIndex == 0 {
+		log.Print("No thumbnails, cannot create image")
+		return imageTiles
+	}
 	currentImageIndex := 0
 
 	for _, tiles := range imageTiles {
