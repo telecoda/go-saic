@@ -2,7 +2,7 @@
 <a href="https://dl.dropboxusercontent.com/u/13846060/go-saic-gopher.png"><img src="https://dl.dropboxusercontent.com/u/13846060/go-saic-gopher-scaled.png" alt="go-saic gopher" align="right"/></a>
 
 Written by @telecoda
-
+ 
 Image mosaic generator in go-lang
 
 I know there are a gazillion free image mosaic utilies out there.  I decided to write this as an interesting coding exercise.
