@@ -7,7 +7,6 @@ Image mosaic generator in go-lang
 
 I know there are a gazillion free image mosaic utilies out there.  I decided to write this as an interesting coding exercise.
 
-
 To get command parameters type:
 
     go-saic -?
